@@ -1,0 +1,501 @@
+#include <SPI.h>
+
+//////////////////////////////////////////////////// SPI nRF pins
+
+#define CE_pin    7     // nRF SPI pin
+#define CSN_pin   8     // nRF SPI pin
+#define MOSI_pin  11    // nRF SPI pin
+#define MISO_pin  12    // nRF SPI pin
+#define SCK_pin   13    // nRF SPI pin
+
+//////////////////////////////////////////////////// custom pins
+
+/* analog mux order:
+ * 0 - pitch
+ * 1 - roll
+ * 2 - yaw
+ * 3 - throttle
+ * 4 - pitch trim
+ * 5 - roll trim
+ * 6 - yaw trim
+ * 7 - flaps
+*/
+#define INMUX_0   A3    // analog input mux bit 0
+#define INMUX_1   A4    // analog input mux bit 1
+#define INMUX_2   A5    // analog input mux bit 2
+#define INMUX_C   A6    // analog input mux output
+
+#define THRT_BUT  A2    // turn derivative throttle off while on
+#define LIGHTS1   A0    // bright light switch
+#define LIGHTS2   A1    // dim light switch
+#define T_IND     10    // led indicating active throttle (motor not idle)
+
+/* alarm leds
+ * for this leds, 1 is red, 0 is green
+ * red is alarm off, green is no alarm
+ */
+#define TER_LED   2     // transceiver complete ERROR
+#define RPD_LED   3     // transceiver RPD below -64db flag led
+#define LTO_LED   4     // link timeout led
+#define DBA_LED   5     // drone battery alarm led
+
+//////////////////////////////////////////////////// values
+
+#define SERVOMIN  70    // minimum byte value of servo motor
+#define SERVOMAX  240   // maximum byte value of servo motor
+#define DEADBAND  3     // analog reading tolerance
+#define TRIM_DIV  2     // trim is 50% max of total input
+
+#define THRT_DIV  50    // max throttle increase is 3 per 10ms
+#define THRT_TIME 30000 // throttle time inc/dec time division in us
+#define THRT_ZERO 20    // max idle throttle
+
+#define OUTBYTES  5     // bytes transmitted
+#define INBYTES   1     // bytes received
+#define TIMEOUT   30000 // link timeout in microseconds
+
+#define PACK_TIME 1000000 // time to count packages
+
+/* RF_status individual bits:
+ * 0 = transceiver complete ERROR       ( set and showed at nRF_COMMcheck() )
+ * 1 = transceiver RPD below -64db flag ( set in receiving )
+ * 2 = link timeout                     ( set in loop )
+ * 3 = drone battery alarm              ( set reading answer received )
+ */
+byte RF_status=B00001111;
+/* data_transmit structure
+ * 0 - pitch
+ * 1 - roll
+ * 2 - yaw
+ * 3 - throttle
+ * 4 - switches:
+ *    7   - lights
+ *    6-0 - flaps (0-127)
+*/
+byte data_transmit[OUTBYTES];
+/* data receive structure
+ * 0 - drone alarm flag
+*/
+byte data_receive[INBYTES];
+byte spi_status=0;
+
+int throttle_value=0;
+int pack_count=0;
+int last_pack_count=0;
+int flap_value=84;
+
+unsigned long int pack_time=0; // time to count packages received
+unsigned long int silence_time=0; // no answer time
+unsigned long int throttle_time=0; // throttle time division
+
+//unsigned long int pirokitos=millis();
+
+void setup(){
+  nRF_init();
+
+  Serial.begin(9600);
+  while(!Serial);
+  Serial.println(" Master module: Serial ready");
+
+  if(nRF_read(0x00)!=0x7F){
+    Serial.println("nRF24l01+ not working");
+    bitSet(RF_status,0);
+    digitalWrite(TER_LED,1);
+    while(1);
+    }
+  nRF_scanregs(0x00,0x06,1);
+  nRF_scanregs(0x07,0x07,1);
+  nRF_scanregs(0x17,0x17,0);
+  Serial.println("");
+
+  controller_init();
+}
+
+void loop(){
+  read_input();
+  nRF_transmit();
+  silence_timer(0);
+
+  while(!nRF_RXcheck()&&!silence_timer(1));
+
+  if(!silence_timer(1)){
+    delayMicroseconds(100);
+    nRF_receive();
+
+    if(pack_timer(1)){
+      last_pack_count=pack_count;
+      pack_count=0;
+      pack_timer(0);
+      }
+    else
+      pack_count++;
+
+    bitClear(RF_status,2);
+    read_answer();
+    }
+  else
+    bitSet(RF_status,2);
+
+  /*if( (millis()-pirokitos) > 1000 ){
+    for(int i=0;i<=4;i++){
+      Serial.println(data_transmit[i]);
+      }
+    Serial.println("");
+    pirokitos=millis();
+    }*/
+
+  update_alarmleds();
+}
+
+//////////////////////////////////////////////////// custom
+
+boolean pack_timer(boolean setting){
+/* setting:
+ *  1 - measure delay
+ *  0 - resets delay
+ */
+
+  boolean return_value=true;  
+
+  if(setting)
+    if( (micros()-pack_time) >= PACK_TIME )
+      return_value=true;
+    else
+      return_value=false;
+  else
+    pack_time=micros();
+
+  return return_value;
+}
+
+void mux_select(byte channel){
+  digitalWrite(INMUX_0,bitRead(channel,0));
+  digitalWrite(INMUX_1,bitRead(channel,1));
+  digitalWrite(INMUX_2,bitRead(channel,2));
+}
+
+void read_answer(){
+  if(data_receive[0])
+    bitClear(RF_status,3);
+  else
+    bitSet(RF_status,3);
+}
+
+boolean throttle_timer(boolean setting){
+/* setting:
+ *  1 - measure delay
+ *  0 - resets delay
+ */
+
+  boolean return_value=true;  
+
+  if(setting)
+    if( (micros()-throttle_time) >= THRT_TIME )
+      return_value=true;
+    else
+      return_value=false;
+  else
+    throttle_time=micros();
+
+  return return_value;
+}
+
+boolean silence_timer(boolean setting){
+/* setting:
+ *  1 - measure delay
+ *  0 - resets delay
+ */
+
+  boolean return_value=true;  
+
+  if(setting)
+    if( (micros()-silence_time) >= TIMEOUT )
+      return_value=true;
+    else
+      return_value=false;
+  else
+    silence_time=micros();
+
+  return return_value;
+}
+
+void read_input(){
+  input_axis();
+  throttle_axis();
+  input_toggles();
+}
+
+void input_axis(){
+  int value;
+  int trim_value;
+
+  for(int i=0;i<3;i++){
+    mux_select(i);
+    value=analogRead(INMUX_C)/4;
+    if(abs(value-127)<DEADBAND)
+      value=127;
+
+    mux_select(i+5);
+    if(i==0)
+      trim_value=(analogRead(INMUX_C)/2-127)/TRIM_DIV;
+    else
+      trim_value=(analogRead(INMUX_C)/4-127)/TRIM_DIV;
+
+    value+=trim_value;
+    if(value<0)
+      value=0;
+    if(value>255)
+      value=255;
+
+    data_transmit[i]=value;
+    }
+}
+
+void throttle_axis(){
+  int value=0;
+  int old_throt;
+
+  mux_select(3);
+  if(!digitalRead(THRT_BUT))
+    throttle_value=255-analogRead(INMUX_C)/4;
+  else{
+    if(throttle_timer(1)){
+      old_throt=throttle_value;
+      value=127-analogRead(INMUX_C)/4;
+
+      //if(abs(value)>=DEADBAND){
+      value/=THRT_DIV;
+      old_throt+=value;
+      if(old_throt<0)
+        old_throt=0;
+      if(old_throt>255)
+        old_throt=255;
+      throttle_value=old_throt;
+        //}
+
+      throttle_timer(0);
+      }
+    }
+
+  if(throttle_value>=THRT_ZERO){
+    data_transmit[3]=throttle_value;
+    digitalWrite(T_IND,0);
+    }
+  else{
+    data_transmit[3]=0;
+    throttle_value=THRT_ZERO-1;
+    digitalWrite(T_IND,1);
+    }
+
+}
+
+void input_toggles(){
+  byte switches=0;  
+  byte flap;
+
+  bitWrite(switches,7,digitalRead(LIGHTS1));
+  bitWrite(switches,6,digitalRead(LIGHTS2));
+
+  mux_select(4);
+  flap=(analogRead(INMUX_C)/4);
+  if(flap>82){
+    flap_value=flap;
+    }
+  switches|=(flap_value>>2);
+
+  if(nRF_bitread(0x09,0))   // RPD below -64db flag
+    bitClear(RF_status,1);
+  else
+    bitSet(RF_status,1);
+
+  data_transmit[4]=switches;
+}
+
+void controller_init(){
+  pinMode(INMUX_0,OUTPUT);
+  pinMode(INMUX_1,OUTPUT);
+  pinMode(INMUX_2,OUTPUT);
+  pinMode(INMUX_C,INPUT);
+
+  pinMode(LIGHTS1,INPUT);
+  pinMode(LIGHTS2,INPUT);
+  pinMode(THRT_BUT,INPUT);
+
+  pinMode(TER_LED,OUTPUT);
+  pinMode(RPD_LED,OUTPUT);
+  pinMode(LTO_LED,OUTPUT);
+  pinMode(DBA_LED,OUTPUT);
+  digitalWrite(TER_LED,0);
+  digitalWrite(RPD_LED,0);
+  digitalWrite(LTO_LED,0);
+  digitalWrite(DBA_LED,0);
+}
+
+void update_alarmleds(){
+  //digitalWrite(TER_LED,bitRead(RF_status,0)); already done in nRFCOMMcheck()
+  digitalWrite(RPD_LED,bitRead(RF_status,1));
+  digitalWrite(LTO_LED,bitRead(RF_status,2));
+  digitalWrite(DBA_LED,bitRead(RF_status,3));
+}
+
+//////////////////////////////////////////////////// "nRF.h"
+
+void nRF_init(){
+  delay(100);                   // transceiver startup delay
+  pinMode(CE_pin,OUTPUT);
+  pinMode(CSN_pin,OUTPUT);
+  pinMode(MOSI_pin,OUTPUT);
+  pinMode(MISO_pin,INPUT);
+  pinMode(SCK_pin,OUTPUT);
+  SPI.begin();
+  SPI.beginTransaction(SPISettings(SPI_CLOCK_DIV2, MSBFIRST, SPI_MODE0));
+  digitalWrite(CE_pin,HIGH);
+  digitalWrite(CSN_pin,HIGH);
+
+  nRF_write(0x11,INBYTES);    // incoming bytes in RX_PW_P0
+
+  nRF_write(0x00,B01111111);
+  nRF_write(0x01,B00000000);
+  nRF_write(0x02,B00000001);
+  nRF_write(0x04,B00000000);
+  nRF_write(0x05,B01111000);
+  nRF_write(0x06,B00100110);
+
+  nRF_bitwrite(0x07,4,1);
+  nRF_bitwrite(0x07,5,1);
+  nRF_bitwrite(0x07,6,1);
+
+  nRF_send(B11100001);  // flush TX
+  nRF_send(B11100010);  // flush RX
+}
+
+void nRF_write(byte address,byte bytes){
+  byte data[2]={0,0};
+
+  digitalWrite(CSN_pin,LOW);
+  data[0]=SPI.transfer(address+32); // write byte format
+  data[1]=SPI.transfer(bytes);
+  digitalWrite(CSN_pin, HIGH);
+
+  spi_status=data[0];
+}
+
+byte nRF_read(byte address){
+/*
+ * printa = 0 for no serial print
+ * printa = 1 for serial printing the result
+ * printa = 2 for serial printing the status too
+ */
+  byte data[2]={0,0};
+
+  digitalWrite(CSN_pin,LOW);
+  data[0]=SPI.transfer(address+0); // read byte format
+  data[1]=SPI.transfer(B00000000); // read result
+  digitalWrite(CSN_pin, HIGH);
+
+  spi_status=data[0];
+
+  return data[1];
+}
+
+void nRF_send(byte info){
+  byte data=0;
+
+  digitalWrite(CSN_pin,LOW);
+  data=SPI.transfer(info); // write byte format
+  digitalWrite(CSN_pin, HIGH);
+
+  spi_status=data;
+}
+
+void nRF_bitwrite(byte address,byte bite,byte val){
+  byte data;
+
+  data=nRF_read(address);
+  bitWrite(data,bite,val);
+  nRF_write(address,data);
+}
+
+boolean nRF_bitread(byte address,byte bite){
+  boolean state;
+  byte data;
+
+  data=nRF_read(address);
+  if(bitRead(data,bite))
+    state=true;
+  else
+    state=false;
+
+  return state;
+}
+
+void nRF_transmit(){
+  byte data[OUTBYTES+1];
+
+  nRF_send(B11100001);  // flush TX
+  nRF_bitwrite(0x07,4,1); //clear MAX_RT flag
+
+  digitalWrite(CSN_pin,LOW);
+  data[0]=SPI.transfer(B10100000); // load TX payload
+  for(int i=1;i<=OUTBYTES;i++)
+    data[i]=SPI.transfer(data_transmit[i-1]);
+  digitalWrite(CSN_pin, HIGH);
+
+  digitalWrite(CE_pin, LOW);
+  delayMicroseconds(1000);
+  nRF_bitwrite(0x00,0,0); // TX mode
+  delayMicroseconds(1000);
+  digitalWrite(CE_pin, HIGH);
+  delayMicroseconds(1000);
+  nRF_bitwrite(0x00,0,1); // RX mode
+
+  nRF_send(B11100001);  // flush TX
+  nRF_bitwrite(0x07,4,1); //clear MAX_RT flag
+}
+
+boolean nRF_RXcheck(){
+  boolean received;
+
+  if(nRF_bitread(0x17,0))
+    received=false;
+  else
+    received=true;
+
+  return received;
+}
+
+void nRF_receive(){
+  byte data[INBYTES+1];
+
+  digitalWrite(CSN_pin,LOW);
+  data[0]=SPI.transfer(B01100001); // read RX payload
+  for(int i=1;i<=INBYTES;i++)
+    data[i]=SPI.transfer(B00000000);
+  digitalWrite(CSN_pin, HIGH);
+
+  nRF_send(B11100001);  // flush RX
+  for(int i;i<INBYTES;i++)
+    data_receive[i]=data[i+1];
+}
+
+void g_print(byte info){
+  for(int i=7;i>=0;i--){
+    Serial.print(bitRead(info,i));
+    }
+}
+
+void nRF_scanregs(byte start,byte finish,boolean printa){
+  for(int i=start;i<=finish;i++){
+    Serial.print("Reg: ");
+    if(i<0x10)
+      Serial.print("0");
+    Serial.print(i,HEX);
+    Serial.print(" = ");
+    if(printa==false){
+      g_print(nRF_read(i));
+      Serial.println("");
+      }
+    else
+      Serial.println(nRF_read(i),HEX);
+    }
+}

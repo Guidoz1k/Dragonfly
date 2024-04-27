@@ -1,0 +1,42 @@
+videos:
+	- partes mecanicas e dimensionamento
+		motor - 1400kv, escolhido 2812, passo da helice 9x5, conector banana golden (bullet), salva helice
+		esc - 30a, controle
+		servos - controle, extensor em Y, horn and rod, dobradiças nylon
+		helices
+		acoplamento motor - sensored vs sensorless
+		acoplamento servo - servo anal vs dig
+	- escolha entre arduino vs C <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	- escolha do microcontrolador (arduino vs bluepill)
+	- transceiver, nrf24 vs E01-ML01DP5, cap for transceiver
+		distancia
+		protocolo e pacote
+	- parte do hardware, conectores, antenas, cabos
+		pca9685
+		gerenciamento de tensoes --> 12, 5, 3.3
+		muitos inputs --> mux ou mega
+		muitos outputs
+	- software - arduino vs c
+	- baterias - tipos e proteções, celulas e correntes, carregador de bateria, conector xt60, conector jst-xh, alarme
+	- assembly e pintura (pp-dog)
+	- voo
+
+extras:
+	easy:
+	- flaps
+	- fpv + pan --> antenna tracker?
+	- luzes e actuators (firecrackers, payload drop...)
+	- altimetro e temp
+	- inclinometro - acelerometros
+	- bussula --> campo instavel geograficamente
+	medium:
+	- velocimetro (pitot)
+	- laser and sonar rangefinders (radar altimetro?)
+	- reverse thrust
+	hard:
+	- posicionamento (UWB?)
+	- angulo de ataque - magnetico parece ser o melhor
+	- finalmente autopilot (o que eh ardupilot)
+	- multi engine
+	- vtol
+	- slots and vortex generators

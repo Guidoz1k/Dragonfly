@@ -1,0 +1,8 @@
+TX NAO ROLA
+	talvez seja SPI TIMING do nrf24 (nao creio)
+	talvez seja SPI NOT WORKING (nao creio)
+	o startup do nrf24 parece ser a chave do problema...
+
+AMBOS OS MODULOS - o cold startup nao funciona sem o codigo arduino antes, dont know why
+	conexao do IRQ?
+	A CONEXAO SPI PARA DE ENVIAR BYTES...

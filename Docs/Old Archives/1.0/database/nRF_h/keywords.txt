@@ -1,0 +1,13 @@
+nRF_init	KEYWORD2
+nRF_write	KEYWORD2
+nRF_read	KEYWORD2
+nRF_send	KEYWORD2
+nRF_bitwrite	KEYWORD2
+nRF_bitread	KEYWORD2
+nRF_transmit	KEYWORD2
+nRF_RXcheck	KEYWORD2
+nRF_receive	KEYWORD2
+RF_status_bitread	KEYWORD2
+RF_status_bitwrite	KEYWORD2
+nRF_scanregs	KEYWORD2
+g_print	KEYWORD2

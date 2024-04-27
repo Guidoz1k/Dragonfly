@@ -11,7 +11,9 @@
 #define SPI_MO  11
 #define SPI_CK  13
 
-uint8_t spi_nrf(void);
+#define PACKETS 1
+
+uint8_t nrf_channel(uint8_t);
 
 void nrf_setup(void);
 

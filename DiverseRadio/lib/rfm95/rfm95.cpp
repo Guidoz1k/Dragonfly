@@ -12,7 +12,9 @@ uint8_t spi_rfm(void){
     return error;
 }
 
-void rfm_setup(void){
+bool rfm_setup(void){
+    //bool test = 0;
+
     pinMode(SPI_CK, OUTPUT);
     pinMode(SPI_MI, OUTPUT);
     pinMode(SPI_MO, OUTPUT);
@@ -21,4 +23,6 @@ void rfm_setup(void){
     digitalWrite(CS_RFM, HIGH);
 
     SPI.begin();
+
+    return true;
 }

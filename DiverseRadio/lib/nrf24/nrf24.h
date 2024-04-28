@@ -11,10 +11,29 @@
 #define SPI_MO  11
 #define SPI_CK  13
 
-#define PACKETS 1
+// only available for debug
+//uint8_t nrf_spi_read(uint8_t address);
 
 uint8_t nrf_channel(uint8_t);
 
-void nrf_setup(void);
+uint8_t nrf_packets(uint8_t packets);
+
+uint8_t nrf_flushTX(void);
+
+uint8_t nrf_flushRX(void);
+
+bool nrf_check_RX_buffer(void);
+
+bool nrf_check_RPD(void);
+
+void nrf_RX_mode(void);
+
+void nrf_RX_read(uint8_t *buffer);
+
+void nrf_standby_mode(void);
+
+void nrf_TX_transmit(uint8_t *buffer);
+
+bool nrf_setup(void);
 
 #endif

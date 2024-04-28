@@ -12,6 +12,6 @@
 
 uint8_t spi_rfm(void);
 
-void rfm_setup(void);
+bool rfm_setup(void);
 
 #endif

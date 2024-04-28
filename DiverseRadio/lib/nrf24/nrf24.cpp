@@ -1,7 +1,9 @@
 #include <nrf24.h>
 
+uint8_t protocol_packets = 1;
+
 uint8_t nrf_spi_read(uint8_t address){
-    uint8_t data;
+    uint8_t data = 0;
 
     SPI.beginTransaction(SPISettings(SPI_CLOCK_DIV2, MSBFIRST, SPI_MODE0));
     digitalWriteFast(CS_NRF, LOW);
@@ -16,7 +18,7 @@ uint8_t nrf_spi_read(uint8_t address){
 }
 
 uint8_t nrf_spi_write(uint8_t address, uint8_t data){
-    uint8_t status;
+    uint8_t status = 0;
 
     SPI.beginTransaction(SPISettings(SPI_CLOCK_DIV2, MSBFIRST, SPI_MODE0));
     digitalWriteFast(CS_NRF, LOW);
@@ -31,7 +33,7 @@ uint8_t nrf_spi_write(uint8_t address, uint8_t data){
 }
 
 uint8_t nrf_spi_command(uint8_t data){
-    uint8_t status;
+    uint8_t status = 0;
 
     SPI.beginTransaction(SPISettings(SPI_CLOCK_DIV2, MSBFIRST, SPI_MODE0));
     digitalWriteFast(CS_NRF, LOW);
@@ -44,9 +46,9 @@ uint8_t nrf_spi_command(uint8_t data){
     return status;
 }
 
-boolean nrf_spi_bitread(uint8_t address, uint8_t bit){
-    uint8_t data;
-    boolean bitread;
+bool nrf_spi_bitread(uint8_t address, uint8_t bit){
+    uint8_t data = 0;
+    bool bitread = false;
 
     data = nrf_spi_read(address);
     data &= 1 << bit;
@@ -59,7 +61,7 @@ boolean nrf_spi_bitread(uint8_t address, uint8_t bit){
 }
 
 void nrf_spi_bitwrite(uint8_t address, uint8_t bit, boolean value){
-    uint8_t data;
+    uint8_t data = 0;
 
     data = nrf_spi_read(address);
     if(value == 1)
@@ -70,15 +72,24 @@ void nrf_spi_bitwrite(uint8_t address, uint8_t bit, boolean value){
 }
 
 uint8_t nrf_channel(uint8_t channel){
-    uint8_t data;
+    uint8_t data = 0;
 
     data = nrf_spi_write(0x05, channel && 0b01111111);
 
     return data;
 }
 
+uint8_t nrf_packets(uint8_t packets){
+    uint8_t data = 0;
+
+    protocol_packets = packets;
+    data = nrf_spi_write(0x11, protocol_packets && 0b00111111);
+
+    return data;
+}
+
 uint8_t nrf_flushTX(void){
-    uint8_t data;
+    uint8_t data = 0;
 
     data = nrf_spi_command(0b11100001);
 
@@ -86,17 +97,17 @@ uint8_t nrf_flushTX(void){
 }
 
 uint8_t nrf_flushRX(void){
-    uint8_t data;
+    uint8_t data = 0;
 
     data = nrf_spi_command(0b11100010);
 
     return data;
 }
 
-boolean nrf_check_RX_buffer(void){
-    boolean data;
+bool nrf_check_RX_buffer(void){
+    bool data = 0;
 
-    if(nrf_spi_bitread(0x17, 0))
+    if(nrf_spi_bitread(0x17, 0) == 1)
         data = false;
     else
         data = true;
@@ -104,10 +115,10 @@ boolean nrf_check_RX_buffer(void){
     return data;
 }
 
-boolean nrf_check_RX_power(void){ // TODO
-    boolean data;
+bool nrf_check_RPD(void){
+    bool data = 0;
 
-    // TODO: should spend 170us in RX mode
+    delayMicroseconds(170);
     if(nrf_spi_read(0x09))
         data = true;
     else
@@ -116,7 +127,56 @@ boolean nrf_check_RX_power(void){ // TODO
     return data;
 }
 
-void nrf_setup(void){ // TODO
+void nrf_RX_mode(void){
+    nrf_spi_bitwrite(0x00, 0, 1); // RX mode
+    digitalWrite(CE_NRF, HIGH);
+    delayMicroseconds(130); // radio settling time
+}
+
+void nrf_RX_read(uint8_t *buffer){
+    uint8_t aux;
+
+    SPI.beginTransaction(SPISettings(SPI_CLOCK_DIV2, MSBFIRST, SPI_MODE0));
+    digitalWriteFast(CS_NRF, LOW);
+
+    SPI.transfer(0b01100001); // read RX payload
+    for(aux=0; aux < protocol_packets; aux++)
+        *(buffer++) = SPI.transfer(0);
+
+    digitalWriteFast(CS_NRF, HIGH);
+    SPI.endTransaction();
+}
+
+void nrf_standby_mode(void){
+    digitalWrite(CE_NRF, LOW);
+    nrf_spi_bitwrite(0x00, 0, 1);
+}
+
+void nrf_TX_transmit(uint8_t *buffer){
+    uint8_t aux;
+
+    SPI.beginTransaction(SPISettings(SPI_CLOCK_DIV2, MSBFIRST, SPI_MODE0));
+    digitalWriteFast(CS_NRF, LOW);
+
+    SPI.transfer(0b10100000); // write TX payload
+    for(aux=0; aux < protocol_packets; aux++)
+        SPI.transfer(*(buffer++));
+
+    digitalWriteFast(CS_NRF, HIGH);
+    SPI.endTransaction();
+
+    digitalWriteFast(CE_NRF, LOW);
+    nrf_spi_bitwrite(0x00, 0, 0); // TX mode
+    digitalWriteFast(CE_NRF, HIGH);
+    delayMicroseconds(130); // radio settling time
+
+    while(nrf_spi_bitread(0x17, 4) != 1);
+    nrf_RX_mode();
+}
+
+bool nrf_setup(void){
+    bool test = false;
+
     pinMode(SPI_CK, OUTPUT);
     pinMode(SPI_MI, INPUT);
     pinMode(SPI_MO, OUTPUT);
@@ -133,16 +193,15 @@ void nrf_setup(void){ // TODO
     nrf_spi_write(0x02, 0b00000001);    // enable data pipe 0
     nrf_spi_write(0x04, 0b00000000);    // no auto retransmission
     nrf_spi_write(0x06, 0b00100110);    // maximum power with no continuous carrier
-    nrf_spi_write(0x11, PACKETS); // number of packets expected to be received by transmission
+
     nrf_flushTX();
     nrf_flushRX();
+    nrf_packets(protocol_packets); // standard value
 
-    Serial.begin(115200);
-    delay(1000);
-    Serial.println(nrf_spi_read(0x01));
-    Serial.println(nrf_spi_read(0x02));
-    Serial.println(nrf_spi_read(0x04));
-    Serial.println(nrf_spi_read(0x06));
-    Serial.println(nrf_spi_read(0x11));
-    while(1);
+    if(nrf_spi_read(0x06) == 0b00100110){
+        test = true;
+        delayMicroseconds(1500); // cool radio settling time
+    }
+
+    return test;
 }

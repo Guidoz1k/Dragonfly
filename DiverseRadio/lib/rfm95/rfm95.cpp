@@ -1,5 +1,7 @@
 #include <rfm95.h>
 
+// ====== INTERNAL SPI FUNCTIONS ======
+
 uint8_t spi_rfm(void){
     uint8_t error = 0;
 
@@ -11,6 +13,8 @@ uint8_t spi_rfm(void){
 
     return error;
 }
+
+// ====== EXTERNAL FUNCTIONALITIES ======
 
 bool rfm_setup(void){
     //bool test = 0;

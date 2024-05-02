@@ -3,9 +3,11 @@
 #include <nrf24.h>
 #include <rfm95.h>
 
-#define DEVICE 0
+#define DEVICE 1
 
 void init(void){
+    uint8_t aux;
+
     Serial.begin(115200);
 
     if(nrf_setup() == true){
@@ -24,31 +26,96 @@ void init(void){
     }
 }
 
+/*
+    base:
+    - 10 : dec print
+    - 16 : hex print
+    - 02 : bit print
+    indexation:
+    - 0 : no index
+    - 1 : uses index
+    - 2 : clear index and prints nothing
+*/
+void sprint(uint8_t data, uint8_t base,uint8_t index, bool newline){
+    uint8_t aux = 0;
+    uint8_t binary[8];
+
+    if(index != 0xff){
+        Serial.print("0x");
+        if((index / 16) == 0)
+            Serial.print("0");
+        Serial.print(index, 16);
+        Serial.print(": ");
+        Serial.print("\t");
+    }
+
+    switch(base){
+    case 10:
+        Serial.print(data, 10);
+        break;
+    case 16:
+        if((data / 16) == 0)
+            Serial.print("0");
+        Serial.print(data, 16);
+        break;
+    case 2:
+        for(aux = 0; aux < 8; aux++){
+            if((data % 2) == 1)
+                binary[aux] = 1;
+            else
+                binary[aux] = 0;
+            data /= 2;
+        }
+        for(aux = 8; aux > 0; aux--){
+            if(aux == 4)
+                Serial.print(".");
+            Serial.print(binary[aux - 1]);
+        }
+        break;
+    default:
+        break;
+    }
+
+    if(newline == true)
+        Serial.println("");
+}
+
 int main(){
-    uint8_t buffer[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    uint8_t bufferino[26];
+    uint8_t buffer[26][2];
+    uint8_t aux = 0;
 
     init();
 
-    if(DEVICE == 0){
-        while(1){
-            nrf_TX_chirp(0x01);
-            delay(3000);
-        }
+    for(aux = 0; aux < 26; aux++){
+        buffer[aux][0] = 0;
+        buffer[aux][1] = aux;
     }
-    else{
-        while(1){
-            nrf_registers(buffer);
-            Serial.print("0x00 = "); Serial.println(buffer[0]);
-            Serial.print("0x01 = "); Serial.println(buffer[1]);
-            Serial.print("0x02 = "); Serial.println(buffer[2]);
-            Serial.print("0x04 = "); Serial.println(buffer[3]);
-            Serial.print("0x06 = "); Serial.println(buffer[4]);
-            Serial.print("0x17 = "); Serial.println(buffer[5]);
-            nrf_RX_read(buffer);
-            Serial.print("  RX = "); Serial.println(nrf_check_RX_buffer());
-            Serial.println("");
-            delay(1000);
-        }
-    }
+    buffer[24][1] = 0x1C;
+    buffer[25][1] = 0x1D;
 
+    while(1){
+        for(aux = 0; aux < 3; aux++){
+            delay(1000);
+            nrf_registers(bufferino);
+
+            for(aux = 0; aux < 26; aux++)
+                if(bufferino[aux] != buffer[aux][0]){
+                    Serial.print("diff! add:");
+                    sprint(buffer[aux][1], 16, 0xFF, 0);
+                    Serial.print(" old value: ");
+                    sprint(buffer[aux][0], 2, 0xFF, 0);
+                    Serial.print(" new value: ");
+                    sprint(bufferino[aux], 2, 0xFF, 1);
+                    buffer[aux][0] = bufferino[aux];
+                }
+            nrf_RX_read(bufferino);
+            sprint(bufferino[0], 2, 0xAA, 1);
+        }
+        Serial.println("loop");
+        if(DEVICE == 0){
+            nrf_TX_chirp(0xAA);
+            Serial.println("TX");
+        }
+    }
 }

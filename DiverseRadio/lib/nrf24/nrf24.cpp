@@ -78,7 +78,7 @@ void nrf_spi_bitwrite(uint8_t address, uint8_t bit, boolean value){
 uint8_t nrf_channel(uint8_t channel){
     uint8_t data = 0;
 
-    data = nrf_spi_write(0x05, channel && 0b01111111);
+    data = nrf_spi_write(0x05, channel & 0b01111111);
 
     return data;
 }
@@ -87,7 +87,7 @@ uint8_t nrf_packets(uint8_t packets){
     uint8_t data = 0;
 
     protocol_packets = packets;
-    data = nrf_spi_write(0x11, protocol_packets && 0b00111111);
+    data = nrf_spi_write(0x11, protocol_packets & 0b00111111);
 
     return data;
 }
@@ -136,15 +136,35 @@ bool nrf_check_RPD(void){
 }
 
 /*
-returns values from nRF24 radio's registers 0x00, 0x01, 0x02, 0x04, 0x06 and 0x17
+returns values from all nRF24 radio's 26 registers
 */
 void nrf_registers(uint8_t *buffer){
     *(buffer++) = nrf_spi_read(0x00);
     *(buffer++) = nrf_spi_read(0x01);
     *(buffer++) = nrf_spi_read(0x02);
+    *(buffer++) = nrf_spi_read(0x03);
     *(buffer++) = nrf_spi_read(0x04);
+    *(buffer++) = nrf_spi_read(0x05);
     *(buffer++) = nrf_spi_read(0x06);
+    *(buffer++) = nrf_spi_read(0x07);
+    *(buffer++) = nrf_spi_read(0x08);
+    *(buffer++) = nrf_spi_read(0x09);
+    *(buffer++) = nrf_spi_read(0x0A);
+    *(buffer++) = nrf_spi_read(0x0B);
+    *(buffer++) = nrf_spi_read(0x0C);
+    *(buffer++) = nrf_spi_read(0x0D);
+    *(buffer++) = nrf_spi_read(0x0E);
+    *(buffer++) = nrf_spi_read(0x0F);
+    *(buffer++) = nrf_spi_read(0x10);
+    *(buffer++) = nrf_spi_read(0x11);
+    *(buffer++) = nrf_spi_read(0x12);
+    *(buffer++) = nrf_spi_read(0x13);
+    *(buffer++) = nrf_spi_read(0x14);
+    *(buffer++) = nrf_spi_read(0x15);
+    *(buffer++) = nrf_spi_read(0x16);
     *(buffer++) = nrf_spi_read(0x17);
+    *(buffer++) = nrf_spi_read(0x1C);
+    *(buffer++) = nrf_spi_read(0x1D);
 }
 
 // RADIO OPERATIONS

@@ -3,7 +3,7 @@
 #include <nrf24.h>
 #include <rfm95.h>
 
-#define DEVICE 1
+#define DEVICE 0
 
 void init(void){
     uint8_t aux;
@@ -83,7 +83,7 @@ void sprint(uint8_t data, uint8_t base,uint8_t index, bool newline){
 int main(){
     uint8_t bufferino[26];
     uint8_t buffer[26][2];
-    uint8_t aux = 0;
+    uint8_t aux = 0, aux2 = 0;
 
     init();
 
@@ -95,24 +95,28 @@ int main(){
     buffer[25][1] = 0x1D;
 
     while(1){
-        for(aux = 0; aux < 3; aux++){
-            delay(1000);
-            nrf_registers(bufferino);
+        for(aux2 = 0; aux2 < 3; aux2++){
+                delay(1000);
+                nrf_registers(bufferino);
 
-            for(aux = 0; aux < 26; aux++)
-                if(bufferino[aux] != buffer[aux][0]){
-                    Serial.print("diff! add:");
-                    sprint(buffer[aux][1], 16, 0xFF, 0);
-                    Serial.print(" old value: ");
-                    sprint(buffer[aux][0], 2, 0xFF, 0);
-                    Serial.print(" new value: ");
-                    sprint(bufferino[aux], 2, 0xFF, 1);
-                    buffer[aux][0] = bufferino[aux];
+                for(aux = 0; aux < 26; aux++)
+                    if(bufferino[aux] != buffer[aux][0]){
+                        Serial.print("diff! add:");
+                        sprint(buffer[aux][1], 16, 0xFF, 0);
+                        Serial.print(" old value: ");
+                        sprint(buffer[aux][0], 2, 0xFF, 0);
+                        Serial.print(" new value: ");
+                        sprint(bufferino[aux], 2, 0xFF, 1);
+                        buffer[aux][0] = bufferino[aux];
+                    }
+                nrf_RX_read(bufferino);
+                if(bufferino[0] != 0){
+                    Serial.print("message received: ");
+                    sprint(bufferino[0], 2, 0xAA, 1);
                 }
-            nrf_RX_read(bufferino);
-            sprint(bufferino[0], 2, 0xAA, 1);
         }
-        Serial.println("loop");
+        nrf_flushTX();
+        Serial.println("TX buffer cleared");
         if(DEVICE == 0){
             nrf_TX_chirp(0xAA);
             Serial.println("TX");

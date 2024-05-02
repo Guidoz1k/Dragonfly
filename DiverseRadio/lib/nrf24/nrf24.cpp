@@ -200,11 +200,11 @@ void nrf_TX_mode(void){
     //nrf_spi_bitwrite(0x07, 4, 1); // clear MAX_RT flag
 
     digitalWriteFast(CE_NRF, LOW);
-        delayMicroseconds(10);
+        delayMicroseconds(1000);
     nrf_spi_write(0x00, 0b01111110); // TX mode
-        delayMicroseconds(10);
+        delayMicroseconds(1000);
     digitalWriteFast(CE_NRF, HIGH);
-        delayMicroseconds(10);
+        delayMicroseconds(1000);
     //delayMicroseconds(130); // radio settling time
 
     //while(nrf_spi_bitread(0x17, 4) != 1);

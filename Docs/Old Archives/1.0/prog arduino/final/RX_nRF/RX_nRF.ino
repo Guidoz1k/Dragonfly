@@ -198,6 +198,9 @@ void nRF_init(){
   nRF_send(B11100010);  // flush RX
 }
 
+
+
+
 void nRF_write(byte address,byte bytes){
   byte data[2]={0,0};
 

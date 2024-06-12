@@ -1,5 +1,5 @@
-#ifndef __MAIN_H
-#define __MAIN_H
+#ifndef __GPIOS_H
+#define __GPIOS_H
 
 #include <stdio.h>
 #include "driver/gpio.h"
@@ -9,9 +9,6 @@
 #include "freertos/task.h"
 #include "sdkconfig.h"
 
-#include "serial.h"
-#include "gpios.h"
-#include "timer_core0.h"
-#include "timer_core1.h"
+void gpios_setup(void);
 
-#endif /* __MAIN_H */
+#endif /* GPIOS */

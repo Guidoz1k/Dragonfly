@@ -1,9 +1,10 @@
 {
     "files.associations": {
-        "led.h": "c",
-        "gpio.h": "c",
-        "task.h": "c",
+        "timer_core0.h": "c",
         "freertos.h": "c",
-        "rmt_tx.h": "c"
-    }
+        "gpio.h": "c",
+        "serial.h": "c",
+        "task.h": "c"
+    },
+    "cmake.configureOnOpen": false
 }

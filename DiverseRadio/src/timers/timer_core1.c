@@ -26,7 +26,7 @@ void timer_core1_setup(void){
         .on_alarm = timer_core1,        // set callback for alarm event
     };
     gptimer_alarm_config_t alarm_config = {
-        .alarm_count = PERIOD1,                // 2 millisecond
+        .alarm_count = PERIOD1,             // 2 millisecond
         .reload_count = 0,                  // no initial reload
         .flags.auto_reload_on_alarm = true, // automatically reload counter on alarm
     };

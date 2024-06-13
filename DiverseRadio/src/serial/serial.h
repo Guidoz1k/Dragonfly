@@ -13,14 +13,20 @@
 
 #define MAXSIZE 32
 
+typedef enum {
+    BIN = 2,
+    DEC = 10,
+    HEX = 16,
+} base_t;
+
 void serial_setup();
 
-void serial_write_number(int_fast32_t number, uint_fast8_t newline);
+uint8_t serial_write_word(uint32_t number, uint8_t size, bool newline);
 
-void serial_write_hex(uint_fast32_t number);
+void serial_write_byte(uint8_t number, base_t base, bool newline);
 
 void serial_new_line(void);
 
-void serial_write_string(const char *pointer, uint8_t newline);
+void serial_write_string(const char *pointer, bool newline);
 
 #endif /* SERIAL */

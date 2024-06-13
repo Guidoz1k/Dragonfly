@@ -9,9 +9,9 @@
 #include "freertos/task.h"
 #include "sdkconfig.h"
 
-#include "serial.h"
+//#include "../serial/serial.h"
 
-#define PERIOD0     25      // interrupt period in µs
+#define PERIOD0     50      // interrupt period in µs
 #define SYNCPIN0    32      // interruption 0 work pin
 
 void timer_core0_setup(void);

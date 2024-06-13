@@ -11,4 +11,4 @@
 
 void gpios_setup(void);
 
-#endif /* GPIOS */
+#endif /* __GPIOS_H */

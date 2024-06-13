@@ -9,9 +9,10 @@
 #include "freertos/task.h"
 #include "sdkconfig.h"
 
-#include "serial.h"
-#include "gpios.h"
-#include "timer_core0.h"
-#include "timer_core1.h"
+#include "serial/serial.h"
+#include "GPIO/gpios.h"
+#include "timers/timer_core0.h"
+#include "timers/timer_core1.h"
+#include "SPI/spi.h"
 
 #endif /* __MAIN_H */

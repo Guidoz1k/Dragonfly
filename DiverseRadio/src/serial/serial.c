@@ -58,17 +58,21 @@ uint8_t serial_write_word(uint32_t number, uint8_t size, bool newline){
 }
 
 void serial_write_byte(uint8_t number, base_t base, bool newline){
+    uint8_t i;
     uint8_t size = 0;
-    char buffer[8];
+    char buffer[9];
 
     switch(base){
     case BIN:
-        for(uint8_t i = 0; i < 8; i++){
+        for(i = 0; i < 8; i++){
             buffer[7 - i] = number % 2 + 48;
             number /= 2;
         }
+        for(i = 9; i >= 5; i--)
+            buffer[i] = buffer[i - 1];
+        buffer[4] = '.';
 
-        size = 8;
+        size = 9;
         break;
     case DEC:
         buffer[0] = ((number / 100) % 10) + 48;

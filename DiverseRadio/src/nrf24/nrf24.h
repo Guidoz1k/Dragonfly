@@ -9,12 +9,23 @@
 #include "freertos/task.h"
 #include "sdkconfig.h"
 
-#define CE_NRF  7
-#define CS_NRF  8
+#include "hal/spi_types.h"
+#include "driver/spi_master.h"
 
-#define SPI_MO  11
-#define SPI_MI  12
-#define SPI_CK  13
+#define PIN_MOSI    23
+#define PIN_MISO    19
+#define PIN_CLK     18
+#define PIN_CS      17
+#define PIN_CE      16
+
+void nrf_setup(void);
+
+uint8_t nrf_read_reg(uint8_t reg);
+
+void nrf_write_reg(uint8_t reg, uint8_t data);
+
+void nrf_command(uint8_t command);
+
 /*
 uint8_t nrf_channel(uint8_t);
 
@@ -44,4 +55,5 @@ void nrf_registers(uint8_t *buffer);
 
 void nrf_addressP0(uint8_t *buffer);
 */
+
 #endif

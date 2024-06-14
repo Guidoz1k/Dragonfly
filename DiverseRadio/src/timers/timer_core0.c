@@ -13,7 +13,13 @@ bool IRAM_ATTR timer_core0(gptimer_handle_t timer, const gptimer_alarm_event_dat
 
 void timer_core0_setup(void){
     // GPIO config variables
-    gpio_config_t outputs;
+    gpio_config_t outputs = {
+        .pin_bit_mask = (uint64_t)1 << SYNCPIN0,
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE,
+    };
 
     // timer and alarm variables
     gptimer_handle_t timer = NULL;
@@ -32,11 +38,6 @@ void timer_core0_setup(void){
     };
 
     // GPIO config commands
-    outputs.pin_bit_mask = (uint64_t)1 << SYNCPIN0;
-    outputs.mode = GPIO_MODE_OUTPUT;
-    outputs.pull_up_en = GPIO_PULLUP_DISABLE;
-    outputs.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    outputs.intr_type = GPIO_INTR_DISABLE;
     gpio_config(&outputs);
     gpio_set_level(SYNCPIN0, 0);
 

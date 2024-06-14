@@ -13,6 +13,6 @@
 #include "GPIO/gpios.h"
 #include "timers/timer_core0.h"
 #include "timers/timer_core1.h"
-#include "SPI/spi.h"
+#include "nrf24/nrf24.h"
 
 #endif /* __MAIN_H */

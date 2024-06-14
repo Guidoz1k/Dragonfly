@@ -1,60 +1,82 @@
 #include "nrf24.h"
 
-/*
+spi_device_handle_t spi_device;
 
-uint8_t protocol_packets = 1;
+// INITIAL SETUP AND SPI FUNCTIONS
 
-// ====== INTERNAL SPI FUNCTIONS ======
+void nrf_setup(void){
+    // SPI variables
+    spi_bus_config_t buscfg = {
+        .miso_io_num = PIN_MISO,
+        .mosi_io_num = PIN_MOSI,
+        .sclk_io_num = PIN_CLK,
+        .quadwp_io_num = -1,
+        .quadhd_io_num = -1,
+        .max_transfer_sz = 32,
+    };
+    spi_device_interface_config_t devcfg = {
+        .clock_speed_hz = 8 * 1000 * 1000,     // Clock out at 10 MHz
+        .mode = 0,                              // SPI mode 0
+        .spics_io_num = PIN_CS,                 // CS pin
+        .queue_size = 7,
+    };
+    // GPIO config variables
+    gpio_config_t outputs = {
+        .pin_bit_mask = (uint64_t)1 << PIN_CE,
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE,
+    };
 
-uint8_t nrf_spi_read(uint8_t address){
-    uint8_t data = 0;
+    // Initialize the SPI bus
+    spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_DISABLED); // SPI2_HOST
+    // Attach the radio to the SPI bus
+    spi_bus_add_device(HSPI_HOST, &devcfg, &spi_device);
 
-    SPI.beginTransaction(SPISettings(SPI_CLOCK_DIV2, MSBFIRST, SPI_MODE0));
-    digitalWriteFast(CS_NRF, LOW);
-
-    SPI.transfer(address);
-    data = SPI.transfer(0);
-
-    digitalWriteFast(CS_NRF, HIGH);
-    SPI.endTransaction();
-
-    return data;
+    // GPIO config commands
+    gpio_config(&outputs);
+    gpio_set_level(PIN_CE, 0);
 }
 
-uint8_t nrf_spi_write(uint8_t address, uint8_t data){
-    uint8_t status = 0;
+uint8_t nrf_read_reg(uint8_t reg){
+    uint8_t tx_data[2] = {reg, 0xFF};
+    uint8_t rx_data[2] = {0};
+    spi_transaction_t transaction = {
+        .length = 16,
+        .tx_buffer = tx_data,
+        .rx_buffer = rx_data,
+    };
 
-    SPI.beginTransaction(SPISettings(SPI_CLOCK_DIV2, MSBFIRST, SPI_MODE0));
-    digitalWriteFast(CS_NRF, LOW);
+    spi_device_polling_transmit(spi_device, &transaction);
 
-    status = SPI.transfer(address | (1 << 5)); // to write to registers, add 32 to the register
-    SPI.transfer(data);
-
-    digitalWriteFast(CS_NRF, HIGH);
-    SPI.endTransaction();
-
-    return status;
+    return rx_data[1];
 }
 
-uint8_t nrf_spi_command(uint8_t data){
-    uint8_t status = 0;
+void nrf_write_reg(uint8_t reg, uint8_t data){
+    uint8_t buffer[2] = {reg | 0x20, data};
+    spi_transaction_t transaction = {
+        .length = 16,
+        .tx_buffer = buffer,
+    };
 
-    SPI.beginTransaction(SPISettings(SPI_CLOCK_DIV2, MSBFIRST, SPI_MODE0));
-    digitalWriteFast(CS_NRF, LOW);
-
-    status = SPI.transfer(data);
-
-    digitalWriteFast(CS_NRF, HIGH);
-    SPI.endTransaction();
-
-    return status;
+    spi_device_polling_transmit(spi_device, &transaction);
 }
 
-bool nrf_spi_bitread(uint8_t address, uint8_t bit){
+void nrf_command(uint8_t command){ //////////////// NOT DONE
+    spi_transaction_t transaction = {
+        .length = 8,
+        .tx_buffer = &command,
+    };
+
+    spi_device_polling_transmit(spi_device, &transaction);
+}
+
+bool spi_bitread(uint8_t address, uint8_t bit){
     uint8_t data = 0;
     bool bitread = false;
 
-    data = nrf_spi_read(address);
+    data = nrf_read_reg(address);
     data &= 1 << bit;
     if(data != 0)
         bitread = true;
@@ -64,19 +86,19 @@ bool nrf_spi_bitread(uint8_t address, uint8_t bit){
     return bitread;
 }
 
-void nrf_spi_bitwrite(uint8_t address, uint8_t bit, boolean value){
+void spi_bitwrite(uint8_t address, uint8_t bit, bool value){
     uint8_t data = 0;
 
-    data = nrf_spi_read(address);
+    data = nrf_read_reg(address);
     if(value == 1)
         data |= 1 << bit;
     else
         data &= ~(1 << bit);
-    nrf_spi_write(address, data);
+    nrf_write_reg(address, data);
 }
 
 // ====== EXTERNAL FUNCTIONALITIES ======
-
+/*
 uint8_t nrf_channel(uint8_t channel){
     uint8_t data = 0;
 
@@ -110,12 +132,12 @@ uint8_t nrf_flushRX(void){
     return data;
 }
 
-//*/
-/*  checks if the RX buffer has messages available:
-        true = it has valid packets in RX buffer
-        false = empty RX buffer
-*/
-/*bool nrf_check_RX_buffer(void){
+
+//  checks if the RX buffer has messages available:
+//        true = it has valid packets in RX buffer
+//        false = empty RX buffer
+
+bool nrf_check_RX_buffer(void){
     bool data = 0;
 
     if(nrf_spi_bitread(0x17, 0) == 1)
@@ -137,12 +159,11 @@ bool nrf_check_RPD(void){
 
     return data;
 }
-*/
 
-/*
-returns values from all nRF24 radio's 26 registers
-*/
-/*void nrf_registers(uint8_t *buffer){
+
+// returns values from all nRF24 radio's 26 registers
+
+void nrf_registers(uint8_t *buffer){
     *(buffer++) = nrf_spi_read(0x00);
     *(buffer++) = nrf_spi_read(0x01);
     *(buffer++) = nrf_spi_read(0x02);
@@ -285,45 +306,5 @@ void nrf_TX_chirp(uint data){
     // the end of SPI transfer of TX payload
 
     nrf_TX_mode();
-}
-
-// INITIAL SETUP
-
-bool nrf_setup(void){
-    bool test = false;
-
-    delay(150);
-    pinMode(SPI_CK, OUTPUT);
-    pinMode(SPI_MI, INPUT);
-    pinMode(SPI_MO, OUTPUT);
-
-    pinMode(CS_NRF, OUTPUT);
-    digitalWrite(CS_NRF, HIGH);
-    pinMode(CE_NRF, OUTPUT);
-    digitalWrite(CE_NRF, HIGH); // starts in RX mode
-
-    SPI.begin();
-
-    nrf_spi_write(0x00, 0b01111111);    // no usage of IRQ, 2 bytes CRC on, power on in RX mode
-    nrf_spi_write(0x01, 0b00000000);    // no shockburst
-    nrf_spi_write(0x02, 0b00000001);    // enable data pipe 0
-    nrf_spi_write(0x04, 0b00000000);    // no auto retransmission
-    nrf_spi_write(0x06, 0b00100110);    // maximum power with no continuous carrier
-    //nrf_spi_write(0x06, 0b00100000);    // minimum power with no continuous carrier
-
-    nrf_flushTX();
-    nrf_flushRX();
-    //nrf_channel(0x69);
-    nrf_channel(76);
-    nrf_packets(protocol_packets); // standard value
-
-    nrf_spi_write(0x07, 0x70);  // resets STATUS flags
-    if(nrf_spi_read(0x06) == 0b00100110){
-        test = true;
-        delay(150); // cool radio settling time
-    }
-    
-    nrf_RX_mode();
-    return test;
 }
 */

@@ -7,11 +7,8 @@
 #include <esp_intr_alloc.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "sdkconfig.h"
 
-//#include "../serial/serial.h"
-
-#define PERIOD1     50      // interrupt period in µs
+#define PERIOD1     100     // interrupt period in µs
 #define SYNCPIN1    33      // interruption 1 work pin
 
 void timer_core1_setup(void);

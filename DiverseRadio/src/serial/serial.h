@@ -2,13 +2,6 @@
 #define __SERIAL_H
 
 #include <stdio.h>
-#include "driver/gpio.h"
-#include "driver/gptimer.h"
-#include <esp_intr_alloc.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "sdkconfig.h"
-
 #include "driver/uart.h"
 
 #define MAXSIZE 32

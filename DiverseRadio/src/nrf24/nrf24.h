@@ -1,16 +1,12 @@
-#ifndef __NRF24
-#define __NRF24
+#ifndef __NRF24_H
+#define __NRF24_H
 
 #include <stdio.h>
 #include "driver/gpio.h"
-#include "driver/gptimer.h"
-#include <esp_intr_alloc.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "sdkconfig.h"
-
 #include "hal/spi_types.h"
 #include "driver/spi_master.h"
+
+#include "delay/delay.h"
 
 #define PIN_MOSI    23
 #define PIN_MISO    19
@@ -56,4 +52,4 @@ void nrf_registers(uint8_t *buffer);
 void nrf_addressP0(uint8_t *buffer);
 */
 
-#endif
+#endif /* __NRF24_H */

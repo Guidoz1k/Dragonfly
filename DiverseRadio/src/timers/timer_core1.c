@@ -1,10 +1,12 @@
 #include "timer_core1.h"
 
+#include "delay/delay.h"
+
 bool IRAM_ATTR timer_core1(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx){
     // makes it easy to measure interruption time
     gpio_set_level(SYNCPIN1, 1);
 
-    //vTaskDelay(pdMS_TO_TICKS(1));
+    // TASK OF CORE 1
 
     // makes it easy to measure interruption time
     gpio_set_level(SYNCPIN1, 0);

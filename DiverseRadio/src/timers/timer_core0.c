@@ -4,7 +4,7 @@ bool IRAM_ATTR timer_core0(gptimer_handle_t timer, const gptimer_alarm_event_dat
     // makes it easy to measure interruption time
     gpio_set_level(SYNCPIN0, 1);
 
-    //vTaskDelay(pdMS_TO_TICKS(1));
+    // TASK ON CORE 0
 
     // makes it easy to measure interruption time
     gpio_set_level(SYNCPIN0, 0);

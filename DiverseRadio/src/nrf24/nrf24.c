@@ -1,8 +1,13 @@
 #include "nrf24.h"
 
 spi_device_handle_t spi_device;
+uint8_t payload_size = 1;          // size of the payload in one single transmission (MAX = 32)
+typedef enum {
+    RX = 1,
+    TX = 1,
+} nrf_mode_t;
 
-// INITIAL SETUP AND SPI FUNCTIONS
+// INITIAL SETUP AND INTERNAL SPI READ/WRITE FUNCTIONS
 
 void nrf_setup(void){
     // SPI variables
@@ -40,10 +45,13 @@ void nrf_setup(void){
 }
 
 uint8_t nrf_read_reg(uint8_t reg){
-    uint8_t tx_data[2] = {reg, 0xFF};
+    uint8_t tx_data[2] = {
+        reg,
+        0xFF
+    };
     uint8_t rx_data[2] = {0};
     spi_transaction_t transaction = {
-        .length = 16,
+        .length = 8 + 8,
         .tx_buffer = tx_data,
         .rx_buffer = rx_data,
     };
@@ -54,25 +62,19 @@ uint8_t nrf_read_reg(uint8_t reg){
 }
 
 void nrf_write_reg(uint8_t reg, uint8_t data){
-    uint8_t buffer[2] = {reg | 0x20, data};
+    uint8_t buffer[2] = {
+        reg | 0x20,
+        data
+    };
     spi_transaction_t transaction = {
-        .length = 16,
+        .length = 8 + 8,
         .tx_buffer = buffer,
     };
 
     spi_device_polling_transmit(spi_device, &transaction);
 }
 
-void nrf_command(uint8_t command){ //////////////// NOT DONE
-    spi_transaction_t transaction = {
-        .length = 8,
-        .tx_buffer = &command,
-    };
-
-    spi_device_polling_transmit(spi_device, &transaction);
-}
-
-bool spi_bitread(uint8_t address, uint8_t bit){
+bool nrf_bitread(uint8_t address, uint8_t bit){
     uint8_t data = 0;
     bool bitread = false;
 
@@ -86,7 +88,7 @@ bool spi_bitread(uint8_t address, uint8_t bit){
     return bitread;
 }
 
-void spi_bitwrite(uint8_t address, uint8_t bit, bool value){
+void nrf_bitwrite(uint8_t address, uint8_t bit, bool value){
     uint8_t data = 0;
 
     data = nrf_read_reg(address);
@@ -97,50 +99,73 @@ void spi_bitwrite(uint8_t address, uint8_t bit, bool value){
     nrf_write_reg(address, data);
 }
 
-// ====== EXTERNAL FUNCTIONALITIES ======
-/*
-uint8_t nrf_channel(uint8_t channel){
-    uint8_t data = 0;
+// ============ INTERNAL SPI COMMANDS ============
 
-    data = nrf_spi_write(0x05, channel & 0b01111111);
+void nrf_flushTX(void){
+    uint8_t command = 0b11100001;
+    spi_transaction_t transaction = {
+        .length = 8,
+        .tx_buffer = &command,
+    };
 
-    return data;
+    spi_device_polling_transmit(spi_device, &transaction);
 }
 
-uint8_t nrf_packets(uint8_t packets){
-    uint8_t data = 0;
+void nrf_flushRX(void){
+    uint8_t command = 0b11100010;
+    spi_transaction_t transaction = {
+        .length = 8,
+        .tx_buffer = &command,
+    };
 
-    protocol_packets = packets;
-    data = nrf_spi_write(0x11, protocol_packets & 0b00111111);
-
-    return data;
+    spi_device_polling_transmit(spi_device, &transaction);
 }
 
-uint8_t nrf_flushTX(void){
-    uint8_t data = 0;
+void nrf_readRX(uint8_t *payload){
+    uint8_t tx_data[33] = {0xFF};
+    spi_transaction_t transaction = {
+        .length = 8 + (8 * payload_size),
+        .tx_buffer = tx_data,
+        .rx_buffer = payload,
+    };
 
-    data = nrf_spi_command(0b11100001);
-
-    return data;
+    tx_data[0] = 0b01100001;
+    spi_device_polling_transmit(spi_device, &transaction);
 }
 
-uint8_t nrf_flushRX(void){
-    uint8_t data = 0;
+void nrf_writeTX(uint8_t *payload){
+    uint8_t tx_data[33] = {0xFF};
+    spi_transaction_t transaction = {
+        .length = 8 + (8 * payload_size),
+        .tx_buffer = tx_data,
+    };
+    uint8_t i = 0;
 
-    data = nrf_spi_command(0b11100010);
+    tx_data[0] = 0b10100000;
+    for(i = 0; i < payload_size; i++)
+        tx_data[i + 1] = payload[i];
 
-    return data;
+    spi_device_polling_transmit(spi_device, &transaction);
 }
 
+// ============ EXTERNAL SPI READ/WRITE FUNCTIONS ============
+
+void nrf_channel(uint8_t channel){
+    nrf_write_reg(0x05, channel & 0b01111111);
+}
+
+void nrf_payload_size(uint8_t packets){
+    payload_size = packets;
+    nrf_write_reg(0x11, payload_size & 0b00111111);
+}
 
 //  checks if the RX buffer has messages available:
 //        true = it has valid packets in RX buffer
 //        false = empty RX buffer
-
 bool nrf_check_RX_buffer(void){
     bool data = 0;
 
-    if(nrf_spi_bitread(0x17, 0) == 1)
+    if(nrf_bitread(0x17, 0) == 1)
         data = false;
     else
         data = true;
@@ -148,6 +173,7 @@ bool nrf_check_RX_buffer(void){
     return data;
 }
 
+/*
 bool nrf_check_RPD(void){
     bool data = 0;
 
@@ -159,7 +185,6 @@ bool nrf_check_RPD(void){
 
     return data;
 }
-
 
 // returns values from all nRF24 radio's 26 registers
 
@@ -192,59 +217,12 @@ void nrf_registers(uint8_t *buffer){
     *(buffer++) = nrf_spi_read(0x1D);
 }
 
-void nrf_addressP0(uint8_t *buffer){
-    const uint8_t addressRX = 0x0A;
-    const uint8_t addressTX = 0x10;
-    uint8_t aux;
+void nrf_mode(nrf_mode_t mode){
+    nrf_bitwrite(0x00, 0, mode);
 
-
-    SPI.beginTransaction(SPISettings(SPI_CLOCK_DIV2, MSBFIRST, SPI_MODE0));
-    digitalWriteFast(CS_NRF, LOW);
-
-    SPI.transfer(addressRX | (1 << 5));
-    SPI.transfer(buffer[0]);
-    SPI.transfer(buffer[1]);
-    SPI.transfer(buffer[2]);
-    SPI.transfer(buffer[3]);
-    SPI.transfer(buffer[4]);
-
-    digitalWriteFast(CS_NRF, HIGH);
-    SPI.endTransaction();
-
-    SPI.beginTransaction(SPISettings(SPI_CLOCK_DIV2, MSBFIRST, SPI_MODE0));
-    digitalWriteFast(CS_NRF, LOW);
-
-    SPI.transfer(addressTX | (1 << 5));
-    SPI.transfer(buffer[0]);
-    SPI.transfer(buffer[1]);
-    SPI.transfer(buffer[2]);
-    SPI.transfer(buffer[3]);
-    SPI.transfer(buffer[4]);
-
-    digitalWriteFast(CS_NRF, HIGH);
-    SPI.endTransaction();
-}
-
-// RADIO OPERATIONS
-
-void nrf_RX_mode(void){
     nrf_spi_write(0x00, 0b01111111); // RX mode
     digitalWrite(CE_NRF, HIGH);
     delayMicroseconds(130); // radio settling time
-}
-
-void nrf_RX_read(uint8_t *buffer){
-    uint8_t aux;
-
-    SPI.beginTransaction(SPISettings(SPI_CLOCK_DIV2, MSBFIRST, SPI_MODE0));
-    digitalWriteFast(CS_NRF, LOW);
-
-    SPI.transfer(0b01100001); // read RX payload
-    for(aux=0; aux < protocol_packets; aux++)
-        *(buffer++) = SPI.transfer(0);
-
-    digitalWriteFast(CS_NRF, HIGH);
-    SPI.endTransaction();
 }
 
 void nrf_standby_mode(void){

@@ -14,7 +14,9 @@
         "esp_intr_alloc.h": "c",
         "spi_master.h": "c",
         "nrf24.h": "c",
-        "uart.h": "c"
+        "uart.h": "c",
+        "delay.h": "c",
+        "esp_timer.h": "c"
     },
     "cmake.configureOnOpen": false
 }

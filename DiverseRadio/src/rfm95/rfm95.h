@@ -1,13 +1,13 @@
 #ifndef __RFM95
 #define __RFM95
 
+
 #include <stdio.h>
 #include "driver/gpio.h"
-#include "driver/gptimer.h"
-#include <esp_intr_alloc.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "sdkconfig.h"
+#include "hal/spi_types.h"
+#include "driver/spi_master.h"
+
+#include "delay/delay.h"
 
 #define CS_RFM  6
 

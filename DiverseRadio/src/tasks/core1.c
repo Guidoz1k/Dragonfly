@@ -4,7 +4,6 @@
 #include "serial/serial.h"
 
 void task_core1(void){
-
     while(1){
         delay_milli(1000);
     }

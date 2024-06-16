@@ -23,24 +23,20 @@
 
 void nrf_setup(void);
 
-void nrf_TXflush(void);
-
-void nrf_RXflush(void);
-
-void nrf_RXread(uint8_t *payload);
-
 void nrf_dump11reg(uint8_t *reg_p);
 
 void nrf_channel(uint8_t channel);
 
 void nrf_payload_size(uint8_t packets);
 
-bool nrf_RX_check(void);
-
 bool nrf_RPD_check(void);
 
 void nrf_mode_standby(void);
 
 void nrf_mode_activeRX(void);
+
+bool nrf_RXreceive(uint8_t *payload);
+
+bool nrf_transmit(uint8_t *payload);
 
 #endif /* __NRF24_H */

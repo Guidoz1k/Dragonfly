@@ -20,6 +20,7 @@ void task_core0(void){
         0x17
     };
     uint8_t i = 0;
+    uint8_t rx_boy = 0;
 
     delay_milli(2000);
     while(1){
@@ -35,8 +36,11 @@ void task_core0(void){
                 dump[i] = dump2[i];
             }
         }
+        if(nrf_RXreceive(&rx_boy) == true){
+            serial_write_string(" PACKAGE DETECTED!! value: ", false);
+            serial_write_byte(rx_boy, HEX, true);
+        }
         delay_milli(1000);
-        
     }
 }
 

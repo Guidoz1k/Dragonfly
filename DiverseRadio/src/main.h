@@ -7,9 +7,8 @@
 #include "freertos/task.h"
 
 #include "serial/serial.h"
-#include "GPIO/gpios.h"
-#include "timers/timer_core0.h"
-#include "timers/timer_core1.h"
+#include "tasks/core0.h"
+#include "tasks/core1.h"
 #include "nrf24/nrf24.h"
 #include "delay/delay.h"
 

@@ -8,48 +8,39 @@
 
 #include "delay/delay.h"
 
+// ========== DEFINITIONS ==========
+
 #define PIN_MOSI    23
 #define PIN_MISO    19
 #define PIN_CLK     18
 #define PIN_CS      17
 #define PIN_CE      16
 
+#define PAYLOADSIZE 1
+#define STANDARDCH  0x3F
+
+// ========== FUNCTION PROTOTYPES ==========
+
 void nrf_setup(void);
 
-uint8_t nrf_read_reg(uint8_t reg);
+void nrf_TXflush(void);
 
-void nrf_write_reg(uint8_t reg, uint8_t data);
+void nrf_RXflush(void);
 
-void nrf_command(uint8_t command);
+void nrf_RXread(uint8_t *payload);
 
-/*
-uint8_t nrf_channel(uint8_t);
+void nrf_dump11reg(uint8_t *reg_p);
 
-uint8_t nrf_packets(uint8_t packets);
+void nrf_channel(uint8_t channel);
 
-uint8_t nrf_flushTX(void);
+void nrf_payload_size(uint8_t packets);
 
-uint8_t nrf_flushRX(void);
+bool nrf_RX_check(void);
 
-bool nrf_check_RX_buffer(void);
+bool nrf_RPD_check(void);
 
-bool nrf_check_RPD(void);
+void nrf_mode_standby(void);
 
-void nrf_RX_mode(void);
-
-void nrf_RX_read(uint8_t *buffer);
-
-void nrf_standby_mode(void);
-
-void nrf_TX_transmit(uint8_t *buffer);
-
-void nrf_TX_chirp(uint data);
-
-bool nrf_setup(void);
-
-void nrf_registers(uint8_t *buffer);
-
-void nrf_addressP0(uint8_t *buffer);
-*/
+void nrf_mode_activeRX(void);
 
 #endif /* __NRF24_H */

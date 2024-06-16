@@ -1,5 +1,5 @@
-#ifndef __TIMER_CORE0_H
-#define __TIMER_CORE0_H
+#ifndef __CORE0_H
+#define __CORE0_H
 
 #include <stdio.h>
 #include "driver/gpio.h"
@@ -8,9 +8,13 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "delay/delay.h"
+
 #define PERIOD0     50      // interrupt period in µs
 #define SYNCPIN0    32      // interruption 0 work pin
 
+void task_core0(void);
+
 void timer_core0_setup(void);
 
-#endif /* __TIMER_CORE0_H */
+#endif /* __CORE0_H */

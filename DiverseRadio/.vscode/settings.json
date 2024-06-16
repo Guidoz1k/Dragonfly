@@ -16,7 +16,8 @@
         "nrf24.h": "c",
         "uart.h": "c",
         "delay.h": "c",
-        "esp_timer.h": "c"
+        "esp_timer.h": "c",
+        "core1.h": "c"
     },
     "cmake.configureOnOpen": false
 }

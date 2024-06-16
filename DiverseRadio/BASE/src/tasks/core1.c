@@ -4,7 +4,14 @@
 #include "serial/serial.h"
 
 void task_core1(void){
+    uint8_t tx_boy = 0xEA;
+
+    delay_milli(5000);
+
     while(1){
+        serial_write_string("\n TX ENGAGED! value: ", false);
+        nrf_transmit(&tx_boy);
+        serial_write_byte(tx_boy++, HEX, true);
         delay_milli(1000);
     }
 }

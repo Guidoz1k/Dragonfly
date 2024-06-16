@@ -1,0 +1,23 @@
+{
+    "files.associations": {
+        "timer_core0.h": "c",
+        "freertos.h": "c",
+        "gpio.h": "c",
+        "serial.h": "c",
+        "task.h": "c",
+        "timer_core1.h": "c",
+        "gpios.h": "c",
+        "stdio.h": "c",
+        "sdkconfig.h": "c",
+        "gptimer.h": "c",
+        "spi_types.h": "c",
+        "esp_intr_alloc.h": "c",
+        "spi_master.h": "c",
+        "nrf24.h": "c",
+        "uart.h": "c",
+        "delay.h": "c",
+        "esp_timer.h": "c",
+        "core1.h": "c"
+    },
+    "cmake.configureOnOpen": false
+}

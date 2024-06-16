@@ -1,7 +1,5 @@
 #include "nrf24.h"
 
-#include "serial/serial.h"
-
 spi_device_handle_t spi_device;
 uint8_t payload_size = 1;          // size of the payload in one single transmission (MAX = 32)
 typedef enum {
@@ -76,7 +74,6 @@ void nrf_TXwrite(uint8_t *payload){
     tx_data[0] = 0b10100000;
     for(i = 0; i < payload_size; i++)
         tx_data[i + 1] = payload[i];
-
     spi_device_polling_transmit(spi_device, &transaction);
 }
 

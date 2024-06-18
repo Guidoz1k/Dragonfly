@@ -1,11 +1,9 @@
 #include "nrf24.h"
 
+// INTERNAL SPI FUNCTIONS
+
 spi_device_handle_t spi_device;
 uint8_t payload_size = 1;          // size of the payload in one single transmission (MAX = 32)
-typedef enum {
-    RX = 1,
-    TX = 1,
-} nrf_mode_t;
 
 // INTERNAL SPI FUNCTIONS
 
@@ -71,7 +69,7 @@ void nrf_TXwrite(uint8_t *payload){
     };
     uint8_t i = 0;
 
-    tx_data[0] = 0b10100000;
+    tx_data[0] = 0b10100000;    // write in TX buffer command
     for(i = 0; i < payload_size; i++)
         tx_data[i + 1] = payload[i];
     spi_device_polling_transmit(spi_device, &transaction);
@@ -87,7 +85,7 @@ void nrf_RXread(uint8_t *payload){
     };
     uint8_t i = 0;
 
-    tx_data[0] = 0b01100001;
+    tx_data[0] = 0b01100001;    // read RX buffer command
     spi_device_polling_transmit(spi_device, &transaction);
     for(i = 0; i < payload_size; i++)
         payload[i] = rx_data[i + 1];
@@ -115,7 +113,7 @@ void nrf_RXflush(void){
 
 // ============ EXTERNAL SPI FUNCTIONS ============
 
-void nrf_setup(void){
+void nrf_setup(bool test){
     // SPI variables
     spi_bus_config_t buscfg = {
         .miso_io_num = PIN_MISO,
@@ -141,7 +139,7 @@ void nrf_setup(void){
     };
 
     // Initialize the SPI bus
-    spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_DISABLED); // SPI2_HOST
+    spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_DISABLED);
     // Attach the radio to the SPI bus
     spi_bus_add_device(HSPI_HOST, &devcfg, &spi_device);
 
@@ -156,7 +154,12 @@ void nrf_setup(void){
     nrf_write_reg(0x01, 0);             // NO AUTO ACK
     nrf_write_reg(0x02, 1);             // enable only data pipe 0
     nrf_write_reg(0x04, 0);             // disables re-transmits
-    nrf_write_reg(0x06, 0b00100110);    // RF data rate of 250kbps, maximum TX power
+
+    if(test == true)
+        nrf_write_reg(0x06, 0b00100000);    // RF data rate of 250kbps, minimum TX power for bench test
+    else
+        nrf_write_reg(0x06, 0b00100110);    // RF data rate of 250kbps, maximum TX power for field test
+
     nrf_write_reg(0x07, 0b01111110);    // clear status
     nrf_TXflush();
     nrf_RXflush();
@@ -207,39 +210,38 @@ void nrf_mode_activeRX(void){
 bool nrf_RXreceive(uint8_t *payload){
     bool message_present = false;
 
-    if(nrf_bitread(0x07, 6) == true){
-        nrf_RXread(payload);
-        message_present = true;
-        nrf_RXflush();
-        nrf_bitwrite(0x07, 6, 1);
+    if(nrf_bitread(0x07, 6) == true){   // message received flag
+        nrf_RXread(payload);            // passes the pointer on to the RX buffer read function
+        message_present = true;         // returns true
+        nrf_RXflush();                  // flushes the buffer
+        nrf_bitwrite(0x07, 6, 1);       // clear flag
     }
 
     return message_present;
 }
 
-bool nrf_transmit(uint8_t *payload){
+bool nrf_TXtransmit(uint8_t *payload){
     bool success = false;
 
-    gpio_set_level(PIN_CE, 0);
-    nrf_TXflush();
-    nrf_bitwrite(0x07, 4, 1);
-    nrf_TXwrite(payload);
+    nrf_TXflush();                  // flushes TX buffer
+    nrf_bitwrite(0x07, 4, 1);       // clear MAX_RT flag bit on status register
+    nrf_TXwrite(payload);           // writes on TX buffer the payload
 
-    delay_micro(20);
-    nrf_bitwrite(0x00, 0, 0);
-    delay_micro(20);
-    gpio_set_level(PIN_CE, 1);
+    gpio_set_level(PIN_CE, 0);      // disables radio so it can change its mode
+    nrf_bitwrite(0x00, 0, 0);       // changes mode to TX
+    gpio_set_level(PIN_CE, 1);      // enables radio again to transmit
+    delay_micro(150);               // wait time enough for radio to transmit
+
+    gpio_set_level(PIN_CE, 0);      // disables radio so it can change its mode
     delay_micro(150);
-    gpio_set_level(PIN_CE, 0);
+    nrf_bitwrite(0x00, 0, 1);       // changes mode to RX
+    //delay_micro(150);
+    nrf_bitwrite(0x07, 4, 1);       // clear MAX_RT flag bit on status register
 
-    if(nrf_bitread(0x07, 5) == 1){
-        nrf_bitwrite(0x07, 5, 1);
-        success = true;
+    if(nrf_bitread(0x07, 5) == 1){  // check if RX_DS flag bit was set (Data Sent TX FIFO)
+        nrf_bitwrite(0x07, 5, 1);   // clears bit flag
+        success = true;             // returns true
     }
-    delay_micro(150);
-    nrf_bitwrite(0x00, 0, 1);
-    delay_micro(150);
-    nrf_bitwrite(0x07, 4, 1);
 
     return success;
 }

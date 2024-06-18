@@ -3,7 +3,44 @@
 #include "nrf24/nrf24.h"
 #include "serial/serial.h"
 
-void task_core0(void){
+void task_core0BASE(void){
+    uint8_t dump[11] = {0};
+    uint8_t dump2[11] = {0};
+    uint8_t reg_address[11] = {
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x07,
+        0x09,
+        0x11,
+        0x17
+    };
+    uint8_t i = 0;
+
+    delay_milli(2000);
+    while(1){
+        nrf_dump11reg(dump2);
+        for(i = 0; i < 11; i++){
+            if(dump[i] != dump2[i]){
+                serial_write_string("DIFF FOUND: reg ", false);
+                serial_write_byte(reg_address[i], HEX, false);
+                serial_write_string(", previous value = ", false);
+                serial_write_byte(dump[i], BIN, false);
+                serial_write_string(", current value = ", false);
+                serial_write_byte(dump2[i], BIN, true);
+                dump[i] = dump2[i];
+            }
+        }
+        delay_milli(1000);
+        
+    }
+}
+
+void task_core0DRONE(void){
     uint8_t dump[11] = {0};
     uint8_t dump2[11] = {0};
     uint8_t reg_address[11] = {
@@ -44,7 +81,7 @@ void task_core0(void){
     }
 }
 
-bool IRAM_ATTR timer_core0(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx){
+bool IRAM_ATTR timer_core0BASE(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx){
     // makes it easy to measure interruption time
     gpio_set_level(SYNCPIN0, 1);
 
@@ -55,7 +92,18 @@ bool IRAM_ATTR timer_core0(gptimer_handle_t timer, const gptimer_alarm_event_dat
     return true; // return true to yield for ISR callback to continue
 }
 
-void timer_core0_setup(void){
+bool IRAM_ATTR timer_core0DRONE(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx){
+    // makes it easy to measure interruption time
+    gpio_set_level(SYNCPIN0, 1);
+
+    // TASK ON CORE 0
+
+    // makes it easy to measure interruption time
+    gpio_set_level(SYNCPIN0, 0);
+    return true; // return true to yield for ISR callback to continue
+}
+
+void timer_core0_setup(bool is_base){
     // GPIO config variables
     gpio_config_t outputs = {
         .pin_bit_mask = (uint64_t)1 << SYNCPIN0,
@@ -73,7 +121,7 @@ void timer_core0_setup(void){
         .resolution_hz = 1000000,           // 1 MHz, 1 tick = 1 us
     };
     gptimer_event_callbacks_t cbs = {
-        .on_alarm = timer_core0,        // set callback for alarm event
+        .on_alarm = (is_base == true) ? timer_core0BASE : timer_core0DRONE, // set callback for alarm event
     };
     gptimer_alarm_config_t alarm_config = {
         .alarm_count = PERIOD0,             // 1 millisecond

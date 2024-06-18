@@ -21,7 +21,7 @@
 
 // ========== FUNCTION PROTOTYPES ==========
 
-void nrf_setup(void);
+void nrf_setup(bool test);
 
 void nrf_dump11reg(uint8_t *reg_p);
 
@@ -37,6 +37,6 @@ void nrf_mode_activeRX(void);
 
 bool nrf_RXreceive(uint8_t *payload);
 
-bool nrf_transmit(uint8_t *payload);
+bool nrf_TXtransmit(uint8_t *payload);
 
 #endif /* __NRF24_H */

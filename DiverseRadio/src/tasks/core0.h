@@ -13,8 +13,10 @@
 #define PERIOD0     50      // interrupt period in µs
 #define SYNCPIN0    32      // interruption 0 work pin
 
-void task_core0(void);
+void task_core0BASE(void);
 
-void timer_core0_setup(void);
+void task_core0DRONE(void);
+
+void timer_core0_setup(bool is_base);
 
 #endif /* __CORE0_H */

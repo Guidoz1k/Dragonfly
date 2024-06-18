@@ -1,7 +1,7 @@
 #include "core0.h"
 
-#include "nrf24/nrf24.h"
-#include "serial/serial.h"
+#include "../nrf24/nrf24.h"
+#include "../serial/serial.h"
 
 void task_core0BASE(void){
     uint8_t dump[11] = {0};

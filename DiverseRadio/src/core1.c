@@ -1,7 +1,7 @@
 #include "core1.h"
 
-#include "nrf24/nrf24.h"
-#include "serial/serial.h"
+#include "../nrf24/nrf24.h"
+#include "../serial/serial.h"
 
 void task_core1BASE(void){
     uint8_t tx_boy = 0xEA;

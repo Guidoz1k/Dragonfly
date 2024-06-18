@@ -8,7 +8,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "delay/delay.h"
+#include "../delay/delay.h"
 
 #define PERIOD0     50      // interrupt period in µs
 #define SYNCPIN0    32      // interruption 0 work pin

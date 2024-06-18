@@ -6,10 +6,10 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "serial/serial.h"
-#include "tasks/core0.h"
-#include "tasks/core1.h"
-#include "nrf24/nrf24.h"
-#include "delay/delay.h"
+#include "core0.h"
+#include "core1.h"
+#include "../serial/serial.h"
+#include "../nrf24/nrf24.h"
+#include "../delay/delay.h"
 
 #endif /* __MAIN_H */

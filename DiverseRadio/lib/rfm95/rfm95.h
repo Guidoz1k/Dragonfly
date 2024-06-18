@@ -7,7 +7,7 @@
 #include "hal/spi_types.h"
 #include "driver/spi_master.h"
 
-#include "delay/delay.h"
+#include "../delay/delay.h"
 
 #define CS_RFM  6
 

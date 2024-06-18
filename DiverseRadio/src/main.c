@@ -1,18 +1,21 @@
 #include "main.h"
 
+// environment test for power transmission setup
 #ifdef ENV_BENCHTEST
     #define BENCHTESTING true
 #else
     #define BENCHTESTING false
 #endif
 
+// environment test for BASE or DRONE system
 #ifdef ENV_BASE
     const bool is_base = true;
 #else
     const bool is_base = false;
 #endif
 
-void core1Task(void* parameter){ // RUNS ON CORE 1
+ // RUNS ON CORE 1
+void core1Task(void* parameter){
     timer_core1_setup(is_base);
 
     #ifdef ENV_BASE
@@ -25,7 +28,8 @@ void core1Task(void* parameter){ // RUNS ON CORE 1
     vTaskDelete(NULL);
 }
 
-void app_main(){ // RUNS ON CORE 0
+ // RUNS ON CORE 0
+void app_main(){
     serial_setup();
     nrf_setup(BENCHTESTING);
     timer_core0_setup(is_base);

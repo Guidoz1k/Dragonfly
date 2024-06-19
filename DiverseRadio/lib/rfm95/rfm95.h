@@ -1,5 +1,5 @@
-#ifndef __RFM95
-#define __RFM95
+#ifndef __RFM95_H
+#define __RFM95_H
 
 
 #include <stdio.h>
@@ -7,7 +7,7 @@
 #include "hal/spi_types.h"
 #include "driver/spi_master.h"
 
-#include "../delay/delay.h"
+#include "delay.h"
 
 #define CS_RFM  6
 
@@ -19,4 +19,4 @@ uint8_t spi_rfm(void);
 
 bool rfm_setup(void);
 */
-#endif
+#endif /* __RFM95_H */

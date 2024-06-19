@@ -1,5 +1,7 @@
 #include "serial.h"
 
+uint8_t read_timeout = pdMS_TO_TICKS(10);
+
 void serial_setup(){
     uart_config_t configs = {
         .baud_rate = 115200,
@@ -11,20 +13,13 @@ void serial_setup(){
         .source_clk = UART_SCLK_DEFAULT,
     };
 
-    configs.baud_rate = 115200;
-    configs.data_bits = UART_DATA_8_BITS;
-    configs.parity = UART_PARITY_DISABLE;
-    configs.stop_bits = UART_STOP_BITS_1;
-    configs.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
-    configs.rx_flow_ctrl_thresh = 122;
-
     uart_set_pin(UART_NUM_0, 1, 3, -1, -1);
     uart_param_config(UART_NUM_0, &configs);
     uart_driver_install(UART_NUM_0, 2048, 0, 0, NULL, 0);
 }
 
 uint8_t serial_write_word(uint32_t number, uint8_t size, bool newline){
-    uint8_t buffer[10] = {32};
+    uint8_t buffer[10] = {MAXSIZE};
     uint8_t chars = 10;
     uint8_t i;
 
@@ -123,4 +118,35 @@ void serial_write_string(const char *pointer, bool newline){
         counter--;
 
     uart_write_bytes(UART_NUM_0, buffer, counter + 1);
+}
+
+uint8_t serial_read_chars(uint8_t *buffer, uint8_t size){
+    uint8_t chars_read = 0;
+
+    if(size <= MAXSIZE)
+        chars_read = uart_read_bytes(UART_NUM_0, buffer, size, read_timeout);
+
+    return chars_read;
+}
+
+char serial_read_singlechar(void){
+    char uto = 0;
+
+    uart_read_bytes(UART_NUM_0, &uto, 1, read_timeout);
+
+    return uto;
+}
+
+uint8_t serial_read_size(void){
+    size_t size_IDF = 0;
+    uint8_t size = 0;
+
+    uart_get_buffered_data_len(UART_NUM_0, &size_IDF);
+    size = (uint8_t)size_IDF;
+
+    return size;
+}
+
+void serial_flush(void){
+    uart_flush(UART_NUM_0);
 }

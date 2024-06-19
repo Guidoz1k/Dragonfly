@@ -17,7 +17,10 @@
         "uart.h": "c",
         "delay.h": "c",
         "esp_timer.h": "c",
-        "core1.h": "c"
+        "core1.h": "c",
+        "array": "c",
+        "string_view": "c",
+        "initializer_list": "c"
     },
     "cmake.configureOnOpen": false
 }

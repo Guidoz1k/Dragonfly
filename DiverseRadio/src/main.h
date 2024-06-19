@@ -8,8 +8,8 @@
 
 #include "core0.h"
 #include "core1.h"
-#include "../serial/serial.h"
-#include "../nrf24/nrf24.h"
-#include "../delay/delay.h"
+#include "serial.h"
+#include "nrf24.h"
+#include "delay.h"
 
 #endif /* __MAIN_H */

@@ -5,6 +5,7 @@
 #include "driver/uart.h"
 
 #define MAXSIZE 32
+#define MAXWAIT 50  // 10 milliseconds to read buffer
 
 typedef enum {
     BIN = 2,
@@ -22,4 +23,12 @@ void serial_new_line(void);
 
 void serial_write_string(const char *pointer, bool newline);
 
-#endif /* SERIAL */
+uint8_t serial_read_chars(uint8_t *buffer, uint8_t size);
+
+char serial_read_singlechar(void);
+
+uint8_t serial_read_size(void);
+
+void serial_flush(void);
+
+#endif /* __SERIAL_H */

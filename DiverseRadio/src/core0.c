@@ -21,7 +21,7 @@ void task_core0BASE(void){
     };
     uint8_t i = 0;
 
-    delay_milli(2000);
+    delay_milli(1000);
     while(1){
         nrf_dump11reg(dump2);
         for(i = 0; i < 11; i++){
@@ -59,7 +59,7 @@ void task_core0DRONE(void){
     uint8_t i = 0;
     uint8_t rx_boy = 0;
 
-    delay_milli(2000);
+    delay_milli(1000);
     while(1){
         nrf_dump11reg(dump2);
         for(i = 0; i < 11; i++){

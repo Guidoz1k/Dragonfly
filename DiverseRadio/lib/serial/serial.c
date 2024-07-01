@@ -121,6 +121,7 @@ void serial_write_string(const char *pointer, bool newline){
 }
 
 uint8_t serial_read_chars(uint8_t *buffer, uint8_t size){
+    
     uint8_t chars_read = 0;
 
     if(size <= MAXSIZE)

@@ -11,5 +11,6 @@
 #include "serial.h"
 #include "nrf24.h"
 #include "delay.h"
+#include "led.h"
 
 #endif /* __MAIN_H */

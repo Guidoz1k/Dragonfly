@@ -1,6 +1,5 @@
 {
     "files.associations": {
-        "serial.h": "c",
-        "nrf24.h": "c"
+        "core1.h": "c"
     }
 }

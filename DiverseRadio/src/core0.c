@@ -1,9 +1,12 @@
 #include "core0.h"
 
-#include "../nrf24/nrf24.h"
-#include "../serial/serial.h"
+#include "nrf24.h"
+#include "serial.h"
 
 void task_core0BASE(void){
+
+
+    /*
     uint8_t dump[11] = {0};
     uint8_t dump2[11] = {0};
     uint8_t reg_address[11] = {
@@ -36,9 +39,10 @@ void task_core0BASE(void){
             }
         }
         delay_milli(1000);
-        
     }
+    //*/
 }
+
 
 void task_core0DRONE(void){
     uint8_t dump[11] = {0};
@@ -137,6 +141,6 @@ void timer_core0_setup(bool is_base){
     gptimer_new_timer(&timer_config, &timer);
     gptimer_register_event_callbacks(timer, &cbs, NULL);
     gptimer_set_alarm_action(timer, &alarm_config);
-    gptimer_enable(timer);
-    gptimer_start(timer);
+    //gptimer_enable(timer);
+    //gptimer_start(timer);
 }

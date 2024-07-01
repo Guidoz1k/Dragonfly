@@ -1,19 +1,37 @@
 #include "core1.h"
 
-#include "../nrf24/nrf24.h"
-#include "../serial/serial.h"
+#include "nrf24.h"
+#include "serial.h"
+
+#include "esp_log.h"
+
+static const char *TAG = "UART_EXAMPLE";
 
 void task_core1BASE(void){
+    uint8_t data[10] = {0};
+    int len = 0 ;
+
+    while(1){
+        delay_milli(500);
+        len = uart_read_bytes(UART_NUM_0, data, 10, 10);
+        if(len > 0){
+            data[len] = '\0';
+            ESP_LOGI(TAG, "\n RECEIVED: %s", data);
+        }
+    }
+
+    /*
     uint8_t tx_boy = 0xEA;
     uint8_t rx_buffer[32] = {0};
     bool test = false;
 
     delay_milli(1500);
-    serial_write_string("Initiate test?", false);
+    serial_write_string("Initiate test?", true);
     while(test == false){
         while(serial_read_size() == 0)
             delay_milli(100);
-        serial_read_chars(rx_buffer);
+        serial_read_chars(rx_buffer, 1);
+        serial_write_byte(rx_buffer[0], DEC, true);
         if(rx_buffer[0] == 'y')
             test = true;
     }
@@ -25,6 +43,7 @@ void task_core1BASE(void){
         serial_write_byte(tx_boy++, HEX, true);
         delay_milli(1000);
     }
+    //*/
 }
 
 void task_core1DRONE(void){
@@ -89,6 +108,6 @@ void timer_core1_setup(bool is_base){
     gptimer_new_timer(&timer_config, &timer);
     gptimer_register_event_callbacks(timer, &cbs, NULL);
     gptimer_set_alarm_action(timer, &alarm_config);
-    gptimer_enable(timer);
-    gptimer_start(timer);
+    //gptimer_enable(timer);
+    //gptimer_start(timer);
 }

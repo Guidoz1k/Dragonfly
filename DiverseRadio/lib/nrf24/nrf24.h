@@ -10,11 +10,11 @@
 
 // ========== DEFINITIONS ==========
 
-#define PIN_MOSI    23
-#define PIN_MISO    19
-#define PIN_CLK     18
-#define PIN_CS      17
-#define PIN_CE      16
+#define PIN_MOSI    9
+#define PIN_MISO    10
+#define PIN_CLK     11
+#define PIN_CS      12
+#define PIN_CE      13
 
 #define PAYLOADSIZE 1
 #define STANDARDCH  0x3F

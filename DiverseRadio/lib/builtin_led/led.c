@@ -28,18 +28,19 @@ void rgb_to_rmt_items(const rgb_t *rgb, rmt_item32_t *items) {
     }
 }
 
-void led_setup(void){
-    // RMT INIT
-    rmt_config_t config = RMT_DEFAULT_CONFIG_TX(LED_GPIO_PIN, RMT_CHANNEL);
-    config.clk_div = RMT_CLK_DIV;  // set counter clock to 40MHz / 2 = 20MHz
-    ESP_ERROR_CHECK(rmt_config(&config));
-    ESP_ERROR_CHECK(rmt_driver_install(config.channel, 0, 0));
-}
-
 void led_color(uint8_t r, uint8_t g, uint8_t b){
     rgb_t rgb = {r, g, b};
     rmt_item32_t items[24];
     rgb_to_rmt_items(&rgb, items);
-    ESP_ERROR_CHECK(rmt_write_items(RMT_CHANNEL, items, 24, true));
-    ESP_ERROR_CHECK(rmt_wait_tx_done(RMT_CHANNEL, portMAX_DELAY));
+    rmt_write_items(RMT_CHANNEL, items, 24, true);
+    rmt_wait_tx_done(RMT_CHANNEL, portMAX_DELAY);
+}
+
+void led_setup(void){
+    // RMT INIT
+    rmt_config_t config = RMT_DEFAULT_CONFIG_TX(LED_GPIO_PIN, RMT_CHANNEL);
+    config.clk_div = RMT_CLK_DIV;  // set counter clock to 40MHz / 2 = 20MHz
+    rmt_config(&config);
+    rmt_driver_install(config.channel, 0, 0);
+    led_color(0, 0, 0);
 }

@@ -128,7 +128,7 @@ void nrf_setup(bool test){
         .max_transfer_sz = 32,
     };
     spi_device_interface_config_t devcfg = {
-        .clock_speed_hz = 8 * 1000 * 1000,     // Clock out at 10 MHz
+        .clock_speed_hz = 10 * 1000 * 1000,     // Clock out at 10 MHz
         .mode = 0,                              // SPI mode 0
         .spics_io_num = PIN_CS,                 // CS pin
         .queue_size = 7,
@@ -143,9 +143,9 @@ void nrf_setup(bool test){
     };
 
     // Initialize the SPI bus
-    spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_DISABLED);
+    spi_bus_initialize(SPI2_HOST, &buscfg, SPI_DMA_CH_AUTO);
     // Attach the radio to the SPI bus
-    spi_bus_add_device(HSPI_HOST, &devcfg, &spi_device);
+    spi_bus_add_device(SPI2_HOST, &devcfg, &spi_device);
 
     // GPIO config commands
     gpio_config(&outputs);
@@ -237,7 +237,6 @@ bool nrf_TXtransmit(uint8_t *payload){
     delay_micro(150);               // wait time enough for radio to transmit
 
     gpio_set_level(PIN_CE, 0);      // disables radio so it can change its mode
-    delay_micro(150);               // without this delay, it doesn't fuckin work, GOD KNOW WHY
     nrf_bitwrite(0x00, 0, 1);       // changes mode to RX
     gpio_set_level(PIN_CE, 1);      // enables radio in RX mode
 

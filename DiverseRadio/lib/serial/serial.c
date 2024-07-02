@@ -13,7 +13,7 @@ void serial_setup(){
         .source_clk = UART_SCLK_DEFAULT,
     };
 
-    uart_set_pin(UART_NUM_0, 1, 3, -1, -1);
+    uart_set_pin(UART_NUM_0, 43, 44, -1, -1);
     uart_param_config(UART_NUM_0, &configs);
     uart_driver_install(UART_NUM_0, 2048, 0, 0, NULL, 0);
 }

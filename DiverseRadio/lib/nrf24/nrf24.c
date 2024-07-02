@@ -125,7 +125,7 @@ void nrf_setup(bool test){
         .sclk_io_num = PIN_CLK,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
-        .max_transfer_sz = 32,
+        .max_transfer_sz = 4094,
     };
     spi_device_interface_config_t devcfg = {
         .clock_speed_hz = 10 * 1000 * 1000,     // Clock out at 10 MHz
@@ -237,11 +237,11 @@ bool nrf_TXtransmit(uint8_t *payload){
     delay_micro(150);               // wait time enough for radio to transmit
 
     gpio_set_level(PIN_CE, 0);      // disables radio so it can change its mode
+    delay_micro(150);               // without this delay, it doesn't fuckin work, GOD KNOWS WHY
     nrf_bitwrite(0x00, 0, 1);       // changes mode to RX
     gpio_set_level(PIN_CE, 1);      // enables radio in RX mode
 
-    nrf_bitwrite(0x07, 4, 1);       // clear MAX_RT flag bit on status register
-    if(nrf_bitread(0x07, 5) == 1){  // check if RX_DS flag bit was set (Data Sent TX FIFO)
+    if(nrf_bitread(0x07, 5) == 1){  // check if TX_DS flag bit was set (Data Sent TX FIFO)
         nrf_bitwrite(0x07, 5, 1);   // clears bit flag
         success = true;             // returns true
     }

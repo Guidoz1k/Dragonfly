@@ -4,9 +4,6 @@
 #include "serial.h"
 
 void task_core0BASE(void){
-
-
-    /*
     uint8_t dump[11] = {0};
     uint8_t dump2[11] = {0};
     uint8_t reg_address[11] = {
@@ -40,7 +37,6 @@ void task_core0BASE(void){
         }
         delay_milli(1000);
     }
-    //*/
 }
 
 

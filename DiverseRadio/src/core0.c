@@ -1,83 +1,48 @@
 #include "core0.h"
 
-#include "nrf24.h"
-#include "serial.h"
-
 void task_core0BASE(void){
-    uint8_t dump[11] = {0};
-    uint8_t dump2[11] = {0};
-    uint8_t reg_address[11] = {
-        0x00,
-        0x01,
-        0x02,
-        0x03,
-        0x04,
-        0x05,
-        0x06,
-        0x07,
-        0x09,
-        0x11,
-        0x17
-    };
-    uint8_t i = 0;
+    uint8_t tx_buffer = 0x77;
+    uint8_t rx_buffer = 0;
+    uint8_t timeout_counter = 0;
+    bool received = false;
 
-    delay_milli(1000);
+    delay_milli(2000);
+
     while(1){
-        nrf_dump11reg(dump2);
-        for(i = 0; i < 11; i++){
-            if(dump[i] != dump2[i]){
-                serial_write_string("DIFF FOUND: reg ", false);
-                serial_write_byte(reg_address[i], HEX, false);
-                serial_write_string(", previous value = ", false);
-                serial_write_byte(dump[i], BIN, false);
-                serial_write_string(", current value = ", false);
-                serial_write_byte(dump2[i], BIN, true);
-                dump[i] = dump2[i];
-            }
+        timeout_counter = 0;
+        received = false;
+    
+        nrf_TXtransmit(&tx_buffer);
+        while( (received == false) && (timeout_counter < 10) ){
+            received = nrf_RXreceive(&rx_buffer);
+            delay_milli(100);
+            timeout_counter++;
         }
-        delay_milli(1000);
+        if(received == false)
+            serial_write_string(" TIME OUT! ", true);
+        else{
+            serial_write_string(" MESSAGE RECEIVED: ", false);
+            serial_write_byte(rx_buffer, HEX, true);
+        }
     }
 }
 
-
 void task_core0DRONE(void){
-    uint8_t dump[11] = {0};
-    uint8_t dump2[11] = {0};
-    uint8_t reg_address[11] = {
-        0x00,
-        0x01,
-        0x02,
-        0x03,
-        0x04,
-        0x05,
-        0x06,
-        0x07,
-        0x09,
-        0x11,
-        0x17
-    };
-    uint8_t i = 0;
-    uint8_t rx_boy = 0;
+    uint8_t tx_buffer = 0;
+    uint8_t rx_buffer = 0;
 
     delay_milli(1000);
-    while(1){
-        nrf_dump11reg(dump2);
-        for(i = 0; i < 11; i++){
-            if(dump[i] != dump2[i]){
-                serial_write_string("DIFF FOUND: reg ", false);
-                serial_write_byte(reg_address[i], HEX, false);
-                serial_write_string(", previous value = ", false);
-                serial_write_byte(dump[i], BIN, false);
-                serial_write_string(", current value = ", false);
-                serial_write_byte(dump2[i], BIN, true);
-                dump[i] = dump2[i];
-            }
+    serial_write_string(" READY TO RECEIVE ", true);
+
+    while(1){    
+        while(nrf_RXreceive(&rx_buffer) == false)
+            delay_milli(10);
+        if(rx_buffer == 0x77){
+            serial_write_string(" MESSAGE RECEIVED: ", false);
+            serial_write_byte(rx_buffer, HEX, true);
+            tx_buffer = 0xF0;
         }
-        if(nrf_RXreceive(&rx_boy) == true){
-            serial_write_string(" PACKAGE DETECTED!! value: ", false);
-            serial_write_byte(rx_boy, HEX, true);
-        }
-        delay_milli(1000);
+        nrf_TXtransmit(&tx_buffer);
     }
 }
 
@@ -137,6 +102,6 @@ void timer_core0_setup(bool is_base){
     gptimer_new_timer(&timer_config, &timer);
     gptimer_register_event_callbacks(timer, &cbs, NULL);
     gptimer_set_alarm_action(timer, &alarm_config);
-    //gptimer_enable(timer);
-    //gptimer_start(timer);
+    gptimer_enable(timer);
+    gptimer_start(timer);
 }

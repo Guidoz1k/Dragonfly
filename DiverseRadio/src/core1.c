@@ -1,35 +1,14 @@
 #include "core1.h"
 
-#include "nrf24.h"
-#include "serial.h"
-
 void task_core1BASE(void){
-    uint8_t tx_boy = 0xEA;
-    uint8_t rx_buffer[32] = {0};
-    bool test = false;
-
-    delay_milli(1500);
-    serial_write_string("Initiate test?", true);
-    while(test == false){
-        while(serial_read_size() == 0)
-            delay_milli(100);
-        serial_read_chars(rx_buffer, 1);
-        if(rx_buffer[0] == 'y')
-            test = true;
-    }
-
-    serial_new_line();
     while(1){
-        serial_write_string("TX ENGAGED! value: ", false);
-        nrf_TXtransmit(&tx_boy);
-        serial_write_byte(tx_boy++, HEX, true);
-        delay_milli(1000);
+        delay_milli(100);
     }
 }
 
 void task_core1DRONE(void){
     while(1){
-        delay_milli(1000);
+        delay_milli(100);
     }
 }
 
@@ -89,6 +68,6 @@ void timer_core1_setup(bool is_base){
     gptimer_new_timer(&timer_config, &timer);
     gptimer_register_event_callbacks(timer, &cbs, NULL);
     gptimer_set_alarm_action(timer, &alarm_config);
-    //gptimer_enable(timer);
-    //gptimer_start(timer);
+    gptimer_enable(timer);
+    gptimer_start(timer);
 }

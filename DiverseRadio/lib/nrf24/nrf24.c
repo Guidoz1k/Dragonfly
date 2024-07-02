@@ -1,12 +1,12 @@
-/*
-    This library has one weird timing issue in TX transmit function
-*/
-
 #include "nrf24.h"
 
-// INTERNAL SPI FUNCTIONS
-
 spi_device_handle_t spi_device;
+/*
+    350µs is the maximum allowed time to transmit a single byte
+    t(x) = 130 us (PLL) + (1B Preample + 3B address + xB payload + 1B CRC)*8/ 0.25MBIT = 130 + 192 us (x = 1) = 322 us.
+    the ammount of bytes per payload determines the transmission time therefore the payload setting functions also sets tx_time
+*/
+uint16_t tx_time = 0;
 uint8_t payload_size = 1;          // size of the payload in one single transmission (MAX = 32)
 
 // INTERNAL SPI FUNCTIONS
@@ -125,7 +125,7 @@ void nrf_setup(bool test){
         .sclk_io_num = PIN_CLK,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
-        .max_transfer_sz = 4094,
+        .max_transfer_sz = 4092,
     };
     spi_device_interface_config_t devcfg = {
         .clock_speed_hz = 10 * 1000 * 1000,     // Clock out at 10 MHz
@@ -157,6 +157,7 @@ void nrf_setup(bool test){
     nrf_write_reg(0x00, 0b01111111);    // power is on, complete CRC, no interrupt on IRQ pin, RX MODE
     nrf_write_reg(0x01, 0);             // NO AUTO ACK
     nrf_write_reg(0x02, 1);             // enable only data pipe 0
+    nrf_write_reg(0x03, 3);             // 3 bytes address
     nrf_write_reg(0x04, 0);             // disables re-transmits
 
     if(test == true)
@@ -186,6 +187,14 @@ void nrf_channel(uint8_t channel){
 
 void nrf_payload_size(uint8_t packets){
     payload_size = packets;
+
+/*
+    t(x) = 130 us (PLL) + (1B Preample + 3B address + xB payload + 1B CRC)*8/ 0.25MBIT + 20 us for tolerance
+    t(x) = 130 + (5 + x) * 32 + 20
+    t(x) = 340 + 5 * x
+*/
+    tx_time = 340 + 5 * packets;
+
     nrf_write_reg(0x11, payload_size & 0b00111111);
 }
 
@@ -214,7 +223,7 @@ void nrf_mode_activeRX(void){
 bool nrf_RXreceive(uint8_t *payload){
     bool message_present = false;
 
-    if(nrf_bitread(0x07, 6) == true){   // message received flag
+    if(nrf_bitread(0x07, 6) == true){   // check if RX_DS flag bit was set (Data Ready RX FIFO)
         nrf_RXread(payload);            // passes the pointer on to the RX buffer read function
         message_present = true;         // returns true
         nrf_RXflush();                  // flushes the buffer
@@ -234,10 +243,11 @@ bool nrf_TXtransmit(uint8_t *payload){
     gpio_set_level(PIN_CE, 0);      // disables radio so it can change its mode
     nrf_bitwrite(0x00, 0, 0);       // changes mode to TX
     gpio_set_level(PIN_CE, 1);      // enables radio again to transmit
-    delay_micro(150);               // wait time enough for radio to transmit
+    delay_micro(tx_time);           // wait time enough for radio to transmit
+
+    //while(nrf_bitread(0x07, 5) != 1);
 
     gpio_set_level(PIN_CE, 0);      // disables radio so it can change its mode
-    delay_micro(150);               // without this delay, it doesn't fuckin work, GOD KNOWS WHY
     nrf_bitwrite(0x00, 0, 1);       // changes mode to RX
     gpio_set_level(PIN_CE, 1);      // enables radio in RX mode
 

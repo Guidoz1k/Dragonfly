@@ -16,7 +16,6 @@
 #define PIN_CS      12
 #define PIN_CE      13
 
-#define PAYLOADSIZE 1
 #define STANDARDCH  0x3F
 
 // ========== FUNCTION PROTOTYPES ==========

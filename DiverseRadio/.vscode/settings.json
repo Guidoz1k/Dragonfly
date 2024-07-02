@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "core1.h": "c"
+        "core1.h": "c",
+        "delay.h": "c",
+        "spi_master.h": "c"
     }
 }

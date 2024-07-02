@@ -9,6 +9,8 @@
 #include "freertos/task.h"
 
 #include "delay.h"
+#include "nrf24.h"
+#include "serial.h"
 
 #define PERIOD1     100     // interrupt period in µs
 #define SYNCPIN1    33      // interruption 1 work pin

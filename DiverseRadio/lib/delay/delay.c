@@ -37,11 +37,13 @@ the overhead fluctuates from approximately 0.75µs to 1.4µs
 */
 #include "delay.h"
 
+// Masking of FreeRTOS delay function
 void delay_milli(uint16_t period){
     vTaskDelay(pdMS_TO_TICKS(period));
 }
 
+// Pooling delay using esp timer count
 void delay_micro(uint32_t microseconds){
     uint64_t start_time = esp_timer_get_time();
-    while( esp_timer_get_time() < (start_time + microseconds) );
+    while( esp_timer_get_time() < (start_time + microseconds - 1) );
 }

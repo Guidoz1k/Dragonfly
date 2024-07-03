@@ -1,8 +1,29 @@
 #include "core1.h"
 
 void task_core1BASE(void){
+    uint8_t tx_buffer = 0x77;
+    uint8_t rx_buffer = 0;
+    uint8_t timeout_counter = 0;
+    bool received = false;
+
+    delay_milli(2000);
+
     while(1){
-        delay_milli(100);
+        timeout_counter = 0;
+        received = false;
+    
+        nrf_TXtransmit(&tx_buffer);
+        while( (received == false) && (timeout_counter < 10) ){
+            received = nrf_RXreceive(&rx_buffer);
+            delay_milli(100);
+            timeout_counter++;
+        }
+        if(received == false)
+            serial_write_string(" TIME OUT! ", true);
+        else{
+            serial_write_string(" MESSAGE RECEIVED: ", false);
+            serial_write_byte(rx_buffer, HEX, true);
+        }
     }
 }
 

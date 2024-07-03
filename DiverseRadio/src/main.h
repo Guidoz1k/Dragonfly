@@ -3,8 +3,8 @@
 
 #include <stdio.h>
 #include <esp_intr_alloc.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
 #include "core0.h"
 #include "core1.h"

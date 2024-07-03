@@ -117,6 +117,7 @@ void nrf_RXflush(void){
 
 // ============ EXTERNAL SPI FUNCTIONS ============
 
+// Mandatory setup initialization function
 void nrf_setup(bool test){
     // SPI variables
     spi_bus_config_t buscfg = {
@@ -143,9 +144,9 @@ void nrf_setup(bool test){
     };
 
     // Initialize the SPI bus
-    spi_bus_initialize(SPI2_HOST, &buscfg, SPI_DMA_CH_AUTO);
+    spi_bus_initialize(SPI_CH, &buscfg, SPI_DMA_CH_AUTO);
     // Attach the radio to the SPI bus
-    spi_bus_add_device(SPI2_HOST, &devcfg, &spi_device);
+    spi_bus_add_device(SPI_CH, &devcfg, &spi_device);
 
     // GPIO config commands
     gpio_config(&outputs);
@@ -171,6 +172,7 @@ void nrf_setup(bool test){
     delay_milli(100);
 }
 
+/* old debugging function
 void nrf_dump11reg(uint8_t *reg_p){
     uint8_t i;
 
@@ -180,11 +182,14 @@ void nrf_dump11reg(uint8_t *reg_p){
     *(reg_p++) = nrf_read_reg(0x11);
     *(reg_p++) = nrf_read_reg(0x17);
 }
+*/
 
+// Change the channel from 0 to 127
 void nrf_channel(uint8_t channel){
     nrf_write_reg(0x05, channel & 0b01111111);
 }
 
+// Change the packet size and configure the correct time for TX to transmit
 void nrf_payload_size(uint8_t packets){
     payload_size = packets;
 
@@ -198,6 +203,7 @@ void nrf_payload_size(uint8_t packets){
     nrf_write_reg(0x11, payload_size & 0b00111111);
 }
 
+// Check the RPD register
 bool nrf_RPD_check(void){
     bool data = 0;
 
@@ -210,16 +216,19 @@ bool nrf_RPD_check(void){
     return data;
 }
 
+// Sets the transceiver in standby mode
 void nrf_mode_standby(void){
     gpio_set_level(PIN_CE, 0);
     nrf_bitwrite(0x00, 0, 1);
 }
 
+// Sets the transceiver back in RX mode
 void nrf_mode_activeRX(void){
     gpio_set_level(PIN_CE, 1);
     nrf_bitwrite(0x00, 0, 1);
 }
 
+// Returns true if received valid packet, false if not
 bool nrf_RXreceive(uint8_t *payload){
     bool message_present = false;
 
@@ -233,6 +242,7 @@ bool nrf_RXreceive(uint8_t *payload){
     return message_present;
 }
 
+// Transmits packet and returns to RX mode
 bool nrf_TXtransmit(uint8_t *payload){
     bool success = false;
 

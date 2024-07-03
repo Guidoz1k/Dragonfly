@@ -2,15 +2,16 @@
 #define __CORE0_H
 
 #include <stdio.h>
-#include "driver/gpio.h"
-#include "driver/gptimer.h"
+#include <driver/gpio.h>
+#include <driver/gptimer.h>
 #include <esp_intr_alloc.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
 #include "delay.h"
 #include "nrf24.h"
 #include "serial.h"
+#include "led.h"
 
 #define PERIOD0     50      // interrupt period in µs
 #define SYNCPIN0    47      // interruption 0 work pin

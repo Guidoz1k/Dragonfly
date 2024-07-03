@@ -2,6 +2,15 @@
     "files.associations": {
         "core1.h": "c",
         "delay.h": "c",
-        "spi_master.h": "c"
+        "spi_master.h": "c",
+        "atc.h": "c",
+        "spi_types.h": "c",
+        "freertos.h": "c",
+        "rmt_tx.h": "c",
+        "esp_intr_alloc.h": "c",
+        "gptimer.h": "c",
+        "task.h": "c",
+        "gpio.h": "c",
+        "gpio_reg.h": "c"
     }
 }

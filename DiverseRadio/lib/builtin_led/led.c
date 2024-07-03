@@ -1,11 +1,4 @@
-#include "led.h"
-
-typedef struct {
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
-} rgb_t;
-
+/* old library using rmt.h
 // Function to convert RGB values to RMT items
 void rgb_to_rmt_items(const rgb_t *rgb, rmt_item32_t *items) {
     uint32_t bits[3] = {rgb->green, rgb->red, rgb->blue}; // WS2812 requires GRB order
@@ -43,4 +36,97 @@ void led_setup(void){
     rmt_config(&config);
     rmt_driver_install(config.channel, 0, 0);
     led_color(0, 0, 0);
+}
+// help from https://github.com/espressif/ESP8266_RTOS_SDK/issues/914
+*/
+#include "led.h"
+
+dedic_gpio_bundle_handle_t gpio_bundle = NULL;
+
+void led_setup(void){
+    dedic_gpio_bundle_config_t bundle_config = {
+        .gpio_array = (int[]) {48},
+        .array_size = 1,
+        .flags = {
+            .in_en = 0,
+            .out_en = 1,
+        },
+    };
+    dedic_gpio_new_bundle(&bundle_config, &gpio_bundle);
+}
+
+void led_gpio_fast_set(void){
+    dedic_gpio_bundle_write(gpio_bundle, 1, 1);
+}
+
+void led_gpio_fast_reset(void){
+    dedic_gpio_bundle_write(gpio_bundle, 1, 0);
+}
+
+void IRAM_ATTR ws2812b_bit_0(){
+    led_gpio_fast_set();
+    //delay 0.4us
+    asm("nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop;");
+    led_gpio_fast_reset();
+    //delay 0.85us
+    asm("nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop;");
+}
+
+void IRAM_ATTR ws2812b_bit_1(){
+    led_gpio_fast_set();
+    //delay 0.8us
+    asm("nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop;");
+    led_gpio_fast_reset();
+    //delay 0.45us
+    asm("nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop;");
+}
+
+void IRAM_ATTR ws2812b_byte(uint8_t byte){
+    register volatile uint8_t i;
+
+    for(i = 0; i < 8; i++) {
+        if(byte & 0x80)
+            ws2812b_bit_1();
+        else
+            ws2812b_bit_0();
+        byte <<= 1;
+    }
+    delay_micro(50);
+}
+
+void IRAM_ATTR led_color(uint8_t r, uint8_t g, uint8_t b){
+    ws2812b_byte(r);
+    ws2812b_byte(g);
+    ws2812b_byte(b);
 }

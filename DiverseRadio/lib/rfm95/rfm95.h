@@ -1,22 +1,29 @@
 #ifndef __RFM95_H
 #define __RFM95_H
 
-
 #include <stdio.h>
-#include "driver/gpio.h"
-#include "hal/spi_types.h"
-#include "driver/spi_master.h"
+#include <driver/gpio.h>
+#include <hal/spi_types.h>
+#include <driver/spi_master.h>
 
 #include "delay.h"
 
-#define CS_RFM  6
+// ========== DEFINITIONS ==========
 
-#define SPI_MI  12
-#define SPI_MO  11
-#define SPI_CK  13
-/*
-uint8_t spi_rfm(void);
+#define SPI_CH      SPI3_HOST
+#define PIN_MOSI    9
+#define PIN_MISO    10
+#define PIN_CLK     11
+#define PIN_CS      12
+#define PIN_DIO0    0
+#define PIN_DIO1    0
+#define PIN_DIO2    0
+#define PIN_DIO3    0
+#define PIN_DIO4    0
+#define PIN_DIO5    0
 
-bool rfm_setup(void);
-*/
+// ========== FUNCTION PROTOTYPES ==========
+
+void rfm_setup(void);
+
 #endif /* __RFM95_H */

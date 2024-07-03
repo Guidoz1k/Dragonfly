@@ -2,14 +2,15 @@
 #define __NRF24_H
 
 #include <stdio.h>
-#include "driver/gpio.h"
-#include "hal/spi_types.h"
-#include "driver/spi_master.h"
+#include <driver/gpio.h>
+#include <hal/spi_types.h>
+#include <driver/spi_master.h>
 
 #include "delay.h"
 
 // ========== DEFINITIONS ==========
 
+#define SPI_CH      SPI2_HOST
 #define PIN_MOSI    9
 #define PIN_MISO    10
 #define PIN_CLK     11
@@ -21,8 +22,6 @@
 // ========== FUNCTION PROTOTYPES ==========
 
 void nrf_setup(bool test);
-
-void nrf_dump11reg(uint8_t *reg_p);
 
 void nrf_channel(uint8_t channel);
 

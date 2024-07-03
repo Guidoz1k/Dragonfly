@@ -1,29 +1,39 @@
 #include "core0.h"
 
 void task_core0BASE(void){
-    uint8_t tx_buffer = 0x77;
-    uint8_t rx_buffer = 0;
-    uint8_t timeout_counter = 0;
-    bool received = false;
+    enum {
+        RED = 0,
+        GREEN = 1,
+        BLUE = 2,
+    } mode;
+    uint8_t r_output;
+    uint8_t g_output;
+    uint8_t b_output;
 
-    delay_milli(2000);
+    mode = GREEN;
+    r_output = 255;
+    g_output = 0;
+    b_output = 0;
 
     while(1){
-        timeout_counter = 0;
-        received = false;
-    
-        nrf_TXtransmit(&tx_buffer);
-        while( (received == false) && (timeout_counter < 10) ){
-            received = nrf_RXreceive(&rx_buffer);
-            delay_milli(100);
-            timeout_counter++;
+        switch(mode){
+        case RED:
+            led_color(r_output++, 0, b_output--);
+            if(r_output == 255)
+                mode = GREEN;
+            break;
+        case GREEN:
+            led_color(r_output--, g_output++, 0);
+            if(g_output == 255)
+                mode = BLUE;
+            break;
+        case BLUE:
+            led_color(0, g_output--, b_output++);
+            if(b_output == 255)
+                mode = RED;
+            break;
         }
-        if(received == false)
-            serial_write_string(" TIME OUT! ", true);
-        else{
-            serial_write_string(" MESSAGE RECEIVED: ", false);
-            serial_write_byte(rx_buffer, HEX, true);
-        }
+        delay_milli(10);
     }
 }
 

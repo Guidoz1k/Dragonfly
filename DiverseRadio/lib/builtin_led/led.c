@@ -65,51 +65,42 @@ void led_gpio_fast_reset(void){
 
 void IRAM_ATTR ws2812b_bit_0(){
     led_gpio_fast_set();
-    //delay 0.4us
+    //delay ~ 0.3875µs
     asm("nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop;");
+    led_gpio_fast_reset();
+    //delay ~ 0.8375µs
+    asm("nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop;");
+}
+
+void IRAM_ATTR ws2812b_bit_1(){
+    led_gpio_fast_set();
+    //delay ~ 0.6625µs
+    asm("nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
+        "nop; nop; nop; nop; nop; nop; nop; nop;"
         "nop; nop; nop; nop; nop; nop; nop; nop;"
         "nop; nop; nop; nop; nop; nop; nop; nop;"
         "nop; nop; nop; nop; nop; nop; nop; nop;"
         "nop; nop; nop; nop; nop; nop; nop; nop;"
         "nop;");
     led_gpio_fast_reset();
-    //delay 0.85us
+    //delay ~ 0.5625us
     asm("nop; nop; nop; nop; nop; nop; nop; nop;"
         "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop;");
-}
-
-void IRAM_ATTR ws2812b_bit_1(){
-    led_gpio_fast_set();
-    //delay 0.8us
-    asm("nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop;");
-    led_gpio_fast_reset();
-    //delay 0.45us
-    asm("nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop; nop; nop;"
-        "nop; nop; nop; nop; nop; nop;");
+        "nop; nop; nop; nop; nop; nop; nop; nop;");
 }
 
 void IRAM_ATTR ws2812b_byte(uint8_t byte){

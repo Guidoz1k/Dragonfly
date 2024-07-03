@@ -16,7 +16,7 @@
 
  // RUNS ON CORE 1
 void core1Task(void* parameter){
-    //timer_core1_setup(is_base);
+    timer_core1_setup(is_base);
 
     #ifdef ENV_BASE
         task_core1BASE();
@@ -34,7 +34,7 @@ void app_main(){
     led_setup();
     serial_setup();
     nrf_setup(BENCHTESTING);
-    //timer_core0_setup(is_base);
+    timer_core0_setup(is_base);
 
     // core 1 task creation
     xTaskCreatePinnedToCore(core1Task, "timer1Creator", 10000, NULL, 1, NULL, 1);

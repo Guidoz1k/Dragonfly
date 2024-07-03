@@ -13,7 +13,7 @@
 #include "serial.h"
 
 #define PERIOD1     100     // interrupt period in µs
-#define SYNCPIN1    33      // interruption 1 work pin
+#define SYNCPIN1    21      // interruption 1 work pin
 
 void task_core1BASE(void);
 

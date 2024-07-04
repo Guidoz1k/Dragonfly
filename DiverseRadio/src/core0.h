@@ -13,7 +13,7 @@
 #include "serial.h"
 #include "led.h"
 
-#define PERIOD0     50      // interrupt period in µs
+#define PERIOD0     10      // interrupt period in µs
 #define SYNCPIN0    47      // interruption 0 work pin
 
 void task_core0BASE(void);

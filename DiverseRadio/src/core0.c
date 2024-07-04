@@ -1,5 +1,8 @@
 #include "core0.h"
 
+// incremented roughly every 10µs
+uint64_t time_counter = 0;
+
 void task_core0BASE(void){
     enum {
         RED = 0,
@@ -60,7 +63,7 @@ bool IRAM_ATTR timer_core0BASE(gptimer_handle_t timer, const gptimer_alarm_event
     // makes it easy to measure interruption time
     gpio_set_level(SYNCPIN0, 1);
 
-    // TASK ON CORE 0
+    time_counter++;
 
     // makes it easy to measure interruption time
     gpio_set_level(SYNCPIN0, 0);
@@ -71,7 +74,7 @@ bool IRAM_ATTR timer_core0DRONE(gptimer_handle_t timer, const gptimer_alarm_even
     // makes it easy to measure interruption time
     gpio_set_level(SYNCPIN0, 1);
 
-    // TASK ON CORE 0
+    time_counter++;
 
     // makes it easy to measure interruption time
     gpio_set_level(SYNCPIN0, 0);
@@ -99,7 +102,7 @@ void timer_core0_setup(bool is_base){
         .on_alarm = (is_base == true) ? timer_core0BASE : timer_core0DRONE, // set callback for alarm event
     };
     gptimer_alarm_config_t alarm_config = {
-        .alarm_count = PERIOD0,             // 1 millisecond
+        .alarm_count = PERIOD0,             // 10 microseconds
         .reload_count = 0,                  // no initial reload
         .flags.auto_reload_on_alarm = true, // automatically reload counter on alarm
     };

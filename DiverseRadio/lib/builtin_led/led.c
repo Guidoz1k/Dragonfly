@@ -116,8 +116,11 @@ void IRAM_ATTR ws2812b_byte(uint8_t byte){
     delay_micro(50);
 }
 
+// CRITICAL SECTION SUBROUTINE
 void IRAM_ATTR led_color(uint8_t r, uint8_t g, uint8_t b){
+    taskDISABLE_INTERRUPTS(); // Critical Section to preserve timing
     ws2812b_byte(r);
     ws2812b_byte(g);
     ws2812b_byte(b);
+    taskENABLE_INTERRUPTS();
 }

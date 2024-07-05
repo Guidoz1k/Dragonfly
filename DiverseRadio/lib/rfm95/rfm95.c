@@ -30,10 +30,9 @@
 
 // ========== GLOBAL VARIABLES ==========
 
-// esp_err variable
-static const char *TAG = "nRF24L01+";
+static const char *TAG = "nRF24L01+";   // esp_err variable
 
-static spi_device_handle_t spi_device;
+static spi_device_handle_t spi_device;  // esp_err variable
 
 // ============ INTERNAL SPI FUNCTIONS ============
 

@@ -4,7 +4,7 @@
 // ========== GLOBAL VARIABLES ==========
 
 // incremented roughly every 10µs
-uint64_t time_counter = 0;
+volatile uint64_t time_counter = 0;
 
 // ============ CORE FUNCTIONS ============
 
@@ -65,16 +65,11 @@ void task_core0(void){
             RED = 0,
             GREEN = 1,
             BLUE = 2,
-        } mode;
-        uint8_t r_output;
-        uint8_t g_output;
-        uint8_t b_output;
+        } mode = GREEN;
+        uint8_t r_output = 255;
+        uint8_t g_output = 0;
+        uint8_t b_output = 0;
         uint8_t dimmer = 30;
-
-        mode = GREEN;
-        r_output = 255;
-        g_output = 0;
-        b_output = 0;
 
         while(1){
             switch(mode){

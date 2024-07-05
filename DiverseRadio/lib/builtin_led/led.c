@@ -48,6 +48,8 @@ void led_setup(void){
 #include <driver/dedic_gpio.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <esp_err.h>
+#include <esp_log.h>
 
 // ========== INTERNAL LIBRARIES ==========
 
@@ -60,7 +62,9 @@ void led_setup(void){
 
 // ========== GLOBAL VARIABLES ==========
 
-static dedic_gpio_bundle_handle_t gpio_bundle = NULL;
+static const char *TAG = "WS2812B"; // esp_err variable
+
+static dedic_gpio_bundle_handle_t gpio_bundle = NULL; // hardware handle
 
 // ============ INTERNAL FUNCTIONS ============
 
@@ -138,7 +142,8 @@ void led_setup(void){
         },
     };
 
-    dedic_gpio_new_bundle(&bundle_config, &gpio_bundle);
+    ESP_ERROR_CHECK(dedic_gpio_new_bundle(&bundle_config, &gpio_bundle));
+    ESP_LOGI(TAG, "LED initialized");
 }
 
 // CRITICAL SECTION SUBROUTINE, MUST RUN ON CORE 0

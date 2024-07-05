@@ -26,17 +26,16 @@
 
 // ========== GLOBAL VARIABLES ==========
 
-// esp_err variable
-static const char *TAG = "nRF24L01+";
+static const char *TAG = "nRF24L01+";   // esp_err variable
 
-static spi_device_handle_t spi_device;
-/*
-    350µs is the maximum allowed time to transmit a single byte
-    t(x) = 130 us (PLL) + (1B Preample + 3B address + xB payload + 1B CRC)*8/ 0.25MBIT = 130 + 192 us (x = 1) = 322 us.
-    the ammount of bytes per payload determines the transmission time therefore the payload setting functions also sets tx_time
+static spi_device_handle_t spi_device;  // hardware handle
+
+/* 350µs is the maximum allowed time to transmit a single byte
+   t(x) = 130 us (PLL) + (1B Preample + 3B address + xB payload + 1B CRC)*8/ 0.25MBIT = 130 + 192 us (x = 1) = 322 us.
+   the ammount of bytes per payload determines the transmission time therefore the payload setting functions also sets tx_time
 */
 static uint16_t tx_time = 0;
-static uint8_t payload_size = 1;          // size of the payload in one single transmission (MAX = 32)
+static uint8_t payload_size = 1;    // size of the payload in one single transmission (MAX = 32)
 
 // ============ INTERNAL FUNCTIONS ============
 
@@ -95,7 +94,7 @@ static void nrf_bitwrite(uint8_t address, uint8_t bit, bool value){
 }
 
 static void nrf_TXwrite(uint8_t *payload){
-    uint8_t tx_data[33] = {0xFF};
+    uint8_t tx_data[33] = {0};
     spi_transaction_t transaction = {
         .length = 8 + (8 * payload_size),
         .tx_buffer = tx_data,
@@ -109,7 +108,7 @@ static void nrf_TXwrite(uint8_t *payload){
 }
 
 static void nrf_RXread(uint8_t *payload){
-    uint8_t tx_data[33] = {0xFF};
+    uint8_t tx_data[33] = {0};
     uint8_t rx_data[33] = {0};
     spi_transaction_t transaction = {
         .length = 8 + (8 * payload_size),

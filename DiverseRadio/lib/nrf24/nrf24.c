@@ -1,10 +1,14 @@
 #include "nrf24.h"
 
+// ========== IDF LIBRARIES ==========
+
 #include <stdio.h>
 #include <driver/gpio.h>
 #include <hal/spi_types.h>
 #include <driver/spi_master.h>
 #include <esp_err.h>
+
+// ========== INTERNAL LIBRARIES ==========
 
 #include "delay.h"
 
@@ -19,8 +23,9 @@
 
 #define STANDARDCH  0x3F
 
-// ========== Global Variables ==========
+// ========== GLOBAL VARIABLES ==========
 
+// esp_err variable
 static const char *TAG = "nRF24L01+";
 
 spi_device_handle_t spi_device;
@@ -32,7 +37,7 @@ spi_device_handle_t spi_device;
 uint16_t tx_time = 0;
 uint8_t payload_size = 1;          // size of the payload in one single transmission (MAX = 32)
 
-// INTERNAL SPI FUNCTIONS
+// ============ INTERNAL FUNCTIONS ============
 
 uint8_t nrf_read_reg(uint8_t reg){
     uint8_t tx_data[2] = {

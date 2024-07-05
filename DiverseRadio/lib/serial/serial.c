@@ -1,16 +1,26 @@
 #include "serial.h"
 
+// ========== IDF LIBRARIES ==========
+
 #include <stdio.h>
 #include <driver/uart.h>
 #include <esp_err.h>
 
+// ========== DEFINITIONS ==========
+
 #define MAXSIZE 32
 #define MAXWAIT 50  // 10 milliseconds to read buffer
 
+// ========== GLOBAL VARIABLES ==========
+
+// esp_err variable
 static const char *TAG = "SERIAL DRIVER";
 
 uint8_t read_timeout = pdMS_TO_TICKS(10);
 
+// ============ EXTERNAL FUNCTIONS ============
+
+// Mandatory setup initialization function
 void serial_setup(){
     uart_config_t configs = {
         .baud_rate = 115200,

@@ -1,14 +1,24 @@
 #include "atc.h"
 
+// ========== IDF LIBRARIES ==========
+
 #include <stdio.h>
+
+// ========== INTERNAL LIBRARIES ==========
 
 #include "serial.h"
 #include "delay.h"
 
+// ========== DEFINITIONS ==========
+
 #define COMMANDS    4   // number of commands
 #define PAYLOAD     6   // 1 char for command + ammount of chars used in the payload
 
+// ========== GLOBAL VARIABLES ==========
+
 char in_buffer[PAYLOAD]; // command char + payload
+
+// ============ EXTERNAL FUNCTIONS ============
 
 uint8_t read_command(uint16_t *payload_out){
     uint8_t command_ready = 0;
@@ -45,4 +55,3 @@ uint8_t read_command(uint16_t *payload_out){
 
     return command_ready;
 }
-

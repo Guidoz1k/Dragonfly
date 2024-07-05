@@ -37,9 +37,13 @@ the overhead fluctuates from approximately 0.75µs to 1.4µs
 */
 #include "delay.h"
 
+// ========== IDF LIBRARIES ==========
+
 #include <stdio.h>
 #include <freertos/FreeRTOS.h>
 #include <esp_timer.h>
+
+// ============ EXTERNAL FUNCTIONS ============
 
 // Masking of FreeRTOS delay function
 void delay_milli(uint16_t period){

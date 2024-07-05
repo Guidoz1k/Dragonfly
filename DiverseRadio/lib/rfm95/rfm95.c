@@ -1,10 +1,14 @@
 #include "rfm95.h"
 
+// ========== IDF LIBRARIES ==========
+
 #include <stdio.h>
 #include <driver/gpio.h>
 #include <hal/spi_types.h>
 #include <driver/spi_master.h>
 #include <esp_err.h>
+
+// ========== INTERNAL LIBRARIES ==========
 
 #include "delay.h"
 
@@ -23,13 +27,14 @@
 #define PIN_DIO4    17
 #define PIN_DIO5    17
 
-// ========== Global Variables ==========
+// ========== GLOBAL VARIABLES ==========
 
+// esp_err variable
 static const char *TAG = "nRF24L01+";
 
 spi_device_handle_t spi_device;
 
-// INTERNAL SPI FUNCTIONS
+// ============ INTERNAL SPI FUNCTIONS ============
 
 uint8_t rfm_read_reg(uint8_t reg){
     uint8_t tx_data[2] = {

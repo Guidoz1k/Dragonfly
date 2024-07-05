@@ -41,31 +41,26 @@ void led_setup(void){
 */
 #include "led.h"
 
+// ========== IDF LIBRARIES ==========
+
 #include <stdio.h>
 #include <driver/gpio.h>
 #include <driver/dedic_gpio.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
+// ========== INTERNAL LIBRARIES ==========
+
 #include "delay.h"
+
+// ========== GLOBAL VARIABLES ==========
 
 // Define the GPIO pin connected to the LED
 #define LED_GPIO_PIN 48
 
 dedic_gpio_bundle_handle_t gpio_bundle = NULL;
 
-void led_setup(void){
-    dedic_gpio_bundle_config_t bundle_config = {
-        .gpio_array = (int[]) {48},
-        .array_size = 1,
-        .flags = {
-            .in_en = 0,
-            .out_en = 1,
-        },
-    };
-
-    dedic_gpio_new_bundle(&bundle_config, &gpio_bundle);
-}
+// ============ INTERNAL FUNCTIONS ============
 
 void led_gpio_fast_set(void){
     dedic_gpio_bundle_write(gpio_bundle, 1, 1);
@@ -126,6 +121,22 @@ void IRAM_ATTR ws2812b_byte(uint8_t byte){
         byte <<= 1;
     }
     delay_micro(50);
+}
+
+// ============ EXTERNAL FUNCTIONS ============
+
+// Mandatory setup initialization function
+void led_setup(void){
+    dedic_gpio_bundle_config_t bundle_config = {
+        .gpio_array = (int[]) {48},
+        .array_size = 1,
+        .flags = {
+            .in_en = 0,
+            .out_en = 1,
+        },
+    };
+
+    dedic_gpio_new_bundle(&bundle_config, &gpio_bundle);
 }
 
 // CRITICAL SECTION SUBROUTINE, MUST RUN ON CORE 0

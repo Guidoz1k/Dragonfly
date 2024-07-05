@@ -12,11 +12,11 @@ void rfm_write_reg(uint8_t reg, uint8_t data);
 
 bool rfm_bitread(uint8_t address, uint8_t bit);
 
-void nrf_bitwrite(uint8_t address, uint8_t bit, bool value);
+void rfm_bitwrite(uint8_t address, uint8_t bit, bool value);
 
 // ============ EXTERNAL SPI FUNCTIONS ============
 
-void rfm_setup(void);
+void rfm_setup(bool test);
 
 void rfm_frequency(uint32_t freq);
 

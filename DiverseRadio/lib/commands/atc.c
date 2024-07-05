@@ -16,7 +16,7 @@
 
 // ========== GLOBAL VARIABLES ==========
 
-char in_buffer[PAYLOAD]; // command char + payload
+static char in_buffer[PAYLOAD]; // command char + payload
 
 // ============ EXTERNAL FUNCTIONS ============
 

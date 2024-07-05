@@ -7,6 +7,7 @@
 #include <hal/spi_types.h>
 #include <driver/spi_master.h>
 #include <esp_err.h>
+#include <esp_log.h>
 
 // ========== INTERNAL LIBRARIES ==========
 
@@ -32,11 +33,11 @@
 // esp_err variable
 static const char *TAG = "nRF24L01+";
 
-spi_device_handle_t spi_device;
+static spi_device_handle_t spi_device;
 
 // ============ INTERNAL SPI FUNCTIONS ============
 
-uint8_t rfm_read_reg(uint8_t reg){
+/*static*/ uint8_t rfm_read_reg(uint8_t reg){
     uint8_t tx_data[2] = {
         reg & 0x7F,  // MSB clear for read
         0xFF
@@ -52,7 +53,7 @@ uint8_t rfm_read_reg(uint8_t reg){
     return rx_data[1];
 }
 
-void rfm_write_reg(uint8_t reg, uint8_t data){
+/*static*/ void rfm_write_reg(uint8_t reg, uint8_t data){
     uint8_t buffer[2] = {
         reg | 0x80,  // MSB set for write
         data
@@ -65,7 +66,7 @@ void rfm_write_reg(uint8_t reg, uint8_t data){
     ESP_ERROR_CHECK(spi_device_polling_transmit(spi_device, &transaction));
 }
 
-bool rfm_bitread(uint8_t address, uint8_t bit){
+/*static*/ bool rfm_bitread(uint8_t address, uint8_t bit){
     uint8_t data = 0;
     bool bitread = false;
 
@@ -79,7 +80,7 @@ bool rfm_bitread(uint8_t address, uint8_t bit){
     return bitread;
 }
 
-void nrf_bitwrite(uint8_t address, uint8_t bit, bool value){
+/*static*/ void rfm_bitwrite(uint8_t address, uint8_t bit, bool value){
     uint8_t data = 0;
 
     data = rfm_read_reg(address);
@@ -93,7 +94,7 @@ void nrf_bitwrite(uint8_t address, uint8_t bit, bool value){
 // ============ EXTERNAL SPI FUNCTIONS ============
 
 // Mandatory setup initialization function
-void rfm_setup(void){
+void rfm_setup(bool test){
     // SPI variables
     spi_bus_config_t buscfg = {
         .miso_io_num = PIN_MISO,
@@ -148,7 +149,7 @@ void rfm_setup(void){
 
 
     ESP_LOGI(TAG, "RFM95W initialized");
-/*  REGISTERS config
+/*  REGISTERS config / POWER SETUP MUST FOLLOW bool test
 
     // Put the device in standby mode
     rfm95w_write_register(0x01, 0x01);

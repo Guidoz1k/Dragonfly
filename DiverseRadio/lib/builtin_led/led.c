@@ -53,24 +53,26 @@ void led_setup(void){
 
 #include "delay.h"
 
-// ========== GLOBAL VARIABLES ==========
+// ========== DEFINITIONS ==========
 
 // Define the GPIO pin connected to the LED
 #define LED_GPIO_PIN 48
 
-dedic_gpio_bundle_handle_t gpio_bundle = NULL;
+// ========== GLOBAL VARIABLES ==========
+
+static dedic_gpio_bundle_handle_t gpio_bundle = NULL;
 
 // ============ INTERNAL FUNCTIONS ============
 
-void led_gpio_fast_set(void){
+static inline void led_gpio_fast_set(void){
     dedic_gpio_bundle_write(gpio_bundle, 1, 1);
 }
 
-void led_gpio_fast_reset(void){
+static inline void led_gpio_fast_reset(void){
     dedic_gpio_bundle_write(gpio_bundle, 1, 0);
 }
 
-void IRAM_ATTR ws2812b_bit_0(){
+static inline void IRAM_ATTR ws2812b_bit_0(){
     led_gpio_fast_set();
     //delay ~ 0.3875µs
     asm("nop; nop; nop; nop; nop; nop; nop; nop;"
@@ -90,7 +92,7 @@ void IRAM_ATTR ws2812b_bit_0(){
         "nop; nop; nop; nop; nop;");
 }
 
-void IRAM_ATTR ws2812b_bit_1(){
+static inline void IRAM_ATTR ws2812b_bit_1(){
     led_gpio_fast_set();
     //delay ~ 0.6625µs
     asm("nop; nop; nop; nop; nop; nop; nop; nop;"
@@ -110,7 +112,7 @@ void IRAM_ATTR ws2812b_bit_1(){
         "nop; nop; nop; nop; nop; nop; nop; nop;");
 }
 
-void IRAM_ATTR ws2812b_byte(uint8_t byte){
+static inline void IRAM_ATTR ws2812b_byte(uint8_t byte){
     register volatile uint8_t i;
 
     for(i = 0; i < 8; i++) {

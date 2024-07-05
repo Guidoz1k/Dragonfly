@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <driver/uart.h>
 #include <esp_err.h>
+#include <esp_log.h>
 
 // ========== DEFINITIONS ==========
 
@@ -16,7 +17,7 @@
 // esp_err variable
 static const char *TAG = "SERIAL DRIVER";
 
-uint8_t read_timeout = pdMS_TO_TICKS(10);
+static uint8_t read_timeout = pdMS_TO_TICKS(10);
 
 // ============ EXTERNAL FUNCTIONS ============
 

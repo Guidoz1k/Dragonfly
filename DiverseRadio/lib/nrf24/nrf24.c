@@ -7,6 +7,7 @@
 #include <hal/spi_types.h>
 #include <driver/spi_master.h>
 #include <esp_err.h>
+#include <esp_log.h>
 
 // ========== INTERNAL LIBRARIES ==========
 
@@ -28,18 +29,18 @@
 // esp_err variable
 static const char *TAG = "nRF24L01+";
 
-spi_device_handle_t spi_device;
+static spi_device_handle_t spi_device;
 /*
     350µs is the maximum allowed time to transmit a single byte
     t(x) = 130 us (PLL) + (1B Preample + 3B address + xB payload + 1B CRC)*8/ 0.25MBIT = 130 + 192 us (x = 1) = 322 us.
     the ammount of bytes per payload determines the transmission time therefore the payload setting functions also sets tx_time
 */
-uint16_t tx_time = 0;
-uint8_t payload_size = 1;          // size of the payload in one single transmission (MAX = 32)
+static uint16_t tx_time = 0;
+static uint8_t payload_size = 1;          // size of the payload in one single transmission (MAX = 32)
 
 // ============ INTERNAL FUNCTIONS ============
 
-uint8_t nrf_read_reg(uint8_t reg){
+static uint8_t nrf_read_reg(uint8_t reg){
     uint8_t tx_data[2] = {
         reg,
         0xFF
@@ -55,7 +56,7 @@ uint8_t nrf_read_reg(uint8_t reg){
     return rx_data[1];
 }
 
-void nrf_write_reg(uint8_t reg, uint8_t data){
+static void nrf_write_reg(uint8_t reg, uint8_t data){
     uint8_t buffer[2] = {
         reg | 0x20,
         data
@@ -68,7 +69,7 @@ void nrf_write_reg(uint8_t reg, uint8_t data){
     ESP_ERROR_CHECK(spi_device_polling_transmit(spi_device, &transaction));
 }
 
-bool nrf_bitread(uint8_t address, uint8_t bit){
+static bool nrf_bitread(uint8_t address, uint8_t bit){
     uint8_t data = 0;
     bool bitread = false;
 
@@ -82,7 +83,7 @@ bool nrf_bitread(uint8_t address, uint8_t bit){
     return bitread;
 }
 
-void nrf_bitwrite(uint8_t address, uint8_t bit, bool value){
+static void nrf_bitwrite(uint8_t address, uint8_t bit, bool value){
     uint8_t data = 0;
 
     data = nrf_read_reg(address);
@@ -93,7 +94,7 @@ void nrf_bitwrite(uint8_t address, uint8_t bit, bool value){
     nrf_write_reg(address, data);
 }
 
-void nrf_TXwrite(uint8_t *payload){
+static void nrf_TXwrite(uint8_t *payload){
     uint8_t tx_data[33] = {0xFF};
     spi_transaction_t transaction = {
         .length = 8 + (8 * payload_size),
@@ -107,7 +108,7 @@ void nrf_TXwrite(uint8_t *payload){
     ESP_ERROR_CHECK(spi_device_polling_transmit(spi_device, &transaction));
 }
 
-void nrf_RXread(uint8_t *payload){
+static void nrf_RXread(uint8_t *payload){
     uint8_t tx_data[33] = {0xFF};
     uint8_t rx_data[33] = {0};
     spi_transaction_t transaction = {
@@ -123,7 +124,7 @@ void nrf_RXread(uint8_t *payload){
         payload[i] = rx_data[i + 1];
 }
 
-void nrf_TXflush(void){
+static void nrf_TXflush(void){
     uint8_t command = 0b11100001;
     spi_transaction_t transaction = {
         .length = 8,
@@ -133,7 +134,7 @@ void nrf_TXflush(void){
     ESP_ERROR_CHECK(spi_device_polling_transmit(spi_device, &transaction));
 }
 
-void nrf_RXflush(void){
+static void nrf_RXflush(void){
     uint8_t command = 0b11100010;
     spi_transaction_t transaction = {
         .length = 8,

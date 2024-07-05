@@ -12,6 +12,7 @@ void task_core0BASE(void){
     uint8_t r_output;
     uint8_t g_output;
     uint8_t b_output;
+    uint8_t dimmer = 30;
 
     mode = GREEN;
     r_output = 255;
@@ -21,17 +22,17 @@ void task_core0BASE(void){
     while(1){
         switch(mode){
         case RED:
-            led_color(r_output++, 0, b_output--);
+            led_color(r_output++ / dimmer, 0 / dimmer, b_output-- / dimmer);
             if(r_output == 255)
                 mode = GREEN;
             break;
         case GREEN:
-            led_color(r_output--, g_output++, 0);
+            led_color(r_output-- / dimmer, g_output++ / dimmer, 0 / dimmer);
             if(g_output == 255)
                 mode = BLUE;
             break;
         case BLUE:
-            led_color(0, g_output--, b_output++);
+            led_color(0 / dimmer, g_output-- / dimmer, b_output++ / dimmer);
             if(b_output == 255)
                 mode = RED;
             break;

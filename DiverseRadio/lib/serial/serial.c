@@ -1,5 +1,11 @@
 #include "serial.h"
 
+#include <stdio.h>
+#include <driver/uart.h>
+
+#define MAXSIZE 32
+#define MAXWAIT 50  // 10 milliseconds to read buffer
+
 uint8_t read_timeout = pdMS_TO_TICKS(10);
 
 void serial_setup(){

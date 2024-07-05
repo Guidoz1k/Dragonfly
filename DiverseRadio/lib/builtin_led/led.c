@@ -41,6 +41,17 @@ void led_setup(void){
 */
 #include "led.h"
 
+#include <stdio.h>
+#include <driver/gpio.h>
+#include <driver/dedic_gpio.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+
+#include "delay.h"
+
+// Define the GPIO pin connected to the LED
+#define LED_GPIO_PIN 48
+
 dedic_gpio_bundle_handle_t gpio_bundle = NULL;
 
 void led_setup(void){
@@ -52,6 +63,7 @@ void led_setup(void){
             .out_en = 1,
         },
     };
+
     dedic_gpio_new_bundle(&bundle_config, &gpio_bundle);
 }
 

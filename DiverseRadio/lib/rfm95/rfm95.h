@@ -1,29 +1,25 @@
 #ifndef __RFM95_H
 #define __RFM95_H
 
-#include <stdio.h>
-#include <driver/gpio.h>
-#include <hal/spi_types.h>
-#include <driver/spi_master.h>
-
-#include "delay.h"
-
-// ========== DEFINITIONS ==========
-
-#define SPI_CH      SPI3_HOST
-#define PIN_MOSI    9
-#define PIN_MISO    10
-#define PIN_CLK     11
-#define PIN_CS      12
-#define PIN_DIO0    0
-#define PIN_DIO1    0
-#define PIN_DIO2    0
-#define PIN_DIO3    0
-#define PIN_DIO4    0
-#define PIN_DIO5    0
+#include <stdbool.h>
+#include <stdint.h>
 
 // ========== FUNCTION PROTOTYPES ==========
 
+uint8_t rfm_read_reg(uint8_t reg);
+
+void rfm_write_reg(uint8_t reg, uint8_t data);
+
+bool rfm_bitread(uint8_t address, uint8_t bit);
+
+void nrf_bitwrite(uint8_t address, uint8_t bit, bool value);
+
+// ============ EXTERNAL SPI FUNCTIONS ============
+
 void rfm_setup(void);
+
+void rfm_frequency(uint32_t freq);
+
+bool nrf_TXtransmit(uint8_t *payload);
 
 #endif /* __RFM95_H */

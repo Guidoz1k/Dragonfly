@@ -1,11 +1,8 @@
 #ifndef __SERIAL_H
 #define __SERIAL_H
 
-#include <stdio.h>
-#include <driver/uart.h>
-
-#define MAXSIZE 32
-#define MAXWAIT 50  // 10 milliseconds to read buffer
+#include <stdbool.h>
+#include <stdint.h>
 
 typedef enum {
     BIN = 2,

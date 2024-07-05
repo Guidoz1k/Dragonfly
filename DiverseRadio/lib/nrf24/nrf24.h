@@ -1,25 +1,8 @@
 #ifndef __NRF24_H
 #define __NRF24_H
 
-#include <stdio.h>
-#include <driver/gpio.h>
-#include <hal/spi_types.h>
-#include <driver/spi_master.h>
-
-#include "delay.h"
-
-// ========== DEFINITIONS ==========
-
-#define SPI_CH      SPI2_HOST
-#define PIN_MOSI    9
-#define PIN_MISO    10
-#define PIN_CLK     11
-#define PIN_CS      12
-#define PIN_CE      13
-
-#define STANDARDCH  0x3F
-
-// ========== FUNCTION PROTOTYPES ==========
+#include <stdbool.h>
+#include <stdint.h>
 
 void nrf_setup(bool test);
 

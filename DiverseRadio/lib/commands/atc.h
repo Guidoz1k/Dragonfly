@@ -1,13 +1,7 @@
 #ifndef __ATC_H
 #define __ATC_H
 
-#include <stdio.h>
-
-#include "serial.h"
-#include "delay.h"
-
-#define COMMANDS    4   // number of commands
-#define PAYLOAD     6   // 1 char for command + ammount of chars used in the payload
+#include <stdint.h>
 
 char command[] = {
     0,      // INVALID COMMAND

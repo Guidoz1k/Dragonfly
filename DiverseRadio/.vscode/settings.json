@@ -11,6 +11,10 @@
         "gptimer.h": "c",
         "task.h": "c",
         "gpio.h": "c",
-        "gpio_reg.h": "c"
+        "gpio_reg.h": "c",
+        "nrf24.h": "c",
+        "rfm95.h": "c",
+        "stdio.h": "c",
+        "stdint-gcc.h": "c"
     }
 }

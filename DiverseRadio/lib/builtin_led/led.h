@@ -11,14 +11,7 @@
 #ifndef __LED
 #define __LED
 
-#include <stdio.h>
-#include <driver/gpio.h>
-#include <driver/dedic_gpio.h>
-
-#include "delay.h"
-
-// Define the GPIO pin connected to the LED
-#define LED_GPIO_PIN 48
+#include <stdint.h>
 
 void led_setup(void);
 

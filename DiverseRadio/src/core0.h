@@ -10,6 +10,7 @@
 
 #include "delay.h"
 #include "nrf24.h"
+#include "rfm95.h"
 #include "serial.h"
 #include "led.h"
 

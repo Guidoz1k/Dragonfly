@@ -20,6 +20,6 @@ void rfm_setup(void);
 
 void rfm_frequency(uint32_t freq);
 
-bool nrf_TXtransmit(uint8_t *payload);
+bool rfm_TXtransmit(uint8_t *payload);
 
 #endif /* __RFM95_H */

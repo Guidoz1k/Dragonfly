@@ -4,6 +4,7 @@
 #include <driver/gpio.h>
 #include <hal/spi_types.h>
 #include <driver/spi_master.h>
+#include <esp_err.h>
 
 #include "delay.h"
 
@@ -19,6 +20,8 @@
 #define STANDARDCH  0x3F
 
 // ========== Global Variables ==========
+
+static const char *TAG = "nRF24L01+";
 
 spi_device_handle_t spi_device;
 /*
@@ -43,7 +46,7 @@ uint8_t nrf_read_reg(uint8_t reg){
         .rx_buffer = rx_data,
     };
 
-    spi_device_polling_transmit(spi_device, &transaction);
+    ESP_ERROR_CHECK(spi_device_polling_transmit(spi_device, &transaction));
     return rx_data[1];
 }
 
@@ -57,7 +60,7 @@ void nrf_write_reg(uint8_t reg, uint8_t data){
         .tx_buffer = buffer,
     };
 
-    spi_device_polling_transmit(spi_device, &transaction);
+    ESP_ERROR_CHECK(spi_device_polling_transmit(spi_device, &transaction));
 }
 
 bool nrf_bitread(uint8_t address, uint8_t bit){
@@ -96,7 +99,7 @@ void nrf_TXwrite(uint8_t *payload){
     tx_data[0] = 0b10100000;    // write in TX buffer command
     for(i = 0; i < payload_size; i++)
         tx_data[i + 1] = payload[i];
-    spi_device_polling_transmit(spi_device, &transaction);
+    ESP_ERROR_CHECK(spi_device_polling_transmit(spi_device, &transaction));
 }
 
 void nrf_RXread(uint8_t *payload){
@@ -110,7 +113,7 @@ void nrf_RXread(uint8_t *payload){
     uint8_t i = 0;
 
     tx_data[0] = 0b01100001;    // read RX buffer command
-    spi_device_polling_transmit(spi_device, &transaction);
+    ESP_ERROR_CHECK(spi_device_polling_transmit(spi_device, &transaction));
     for(i = 0; i < payload_size; i++)
         payload[i] = rx_data[i + 1];
 }
@@ -122,7 +125,7 @@ void nrf_TXflush(void){
         .tx_buffer = &command,
     };
 
-    spi_device_polling_transmit(spi_device, &transaction);
+    ESP_ERROR_CHECK(spi_device_polling_transmit(spi_device, &transaction));
 }
 
 void nrf_RXflush(void){
@@ -132,7 +135,7 @@ void nrf_RXflush(void){
         .tx_buffer = &command,
     };
 
-    spi_device_polling_transmit(spi_device, &transaction);
+    ESP_ERROR_CHECK(spi_device_polling_transmit(spi_device, &transaction));
 }
 
 // ============ EXTERNAL SPI FUNCTIONS ============
@@ -164,13 +167,13 @@ void nrf_setup(bool test){
     };
 
     // Initialize the SPI bus
-    spi_bus_initialize(SPI_CH, &buscfg, SPI_DMA_CH_AUTO);
+    ESP_ERROR_CHECK(spi_bus_initialize(SPI_CH, &buscfg, SPI_DMA_CH_AUTO));
     // Attach the radio to the SPI bus
-    spi_bus_add_device(SPI_CH, &devcfg, &spi_device);
+    ESP_ERROR_CHECK(spi_bus_add_device(SPI_CH, &devcfg, &spi_device));
 
     // GPIO config commands
-    gpio_config(&outputs);
-    gpio_set_level(PIN_CE, 1);
+    ESP_ERROR_CHECK(gpio_config(&outputs));
+    ESP_ERROR_CHECK(gpio_set_level(PIN_CE, 1));
 
     delay_milli(100);
     nrf_payload_size(payload_size);
@@ -190,6 +193,8 @@ void nrf_setup(bool test){
     nrf_TXflush();
     nrf_RXflush();
     delay_milli(100);
+
+    ESP_LOGI(TAG, "nRF24L01+ initialized");
 }
 
 /* old debugging function
@@ -238,13 +243,13 @@ bool nrf_RPD_check(void){
 
 // Sets the transceiver in standby mode
 void nrf_mode_standby(void){
-    gpio_set_level(PIN_CE, 0);
+    ESP_ERROR_CHECK(gpio_set_level(PIN_CE, 0));
     nrf_bitwrite(0x00, 0, 1);
 }
 
 // Sets the transceiver back in RX mode
 void nrf_mode_activeRX(void){
-    gpio_set_level(PIN_CE, 1);
+    ESP_ERROR_CHECK(gpio_set_level(PIN_CE, 1));
     nrf_bitwrite(0x00, 0, 1);
 }
 
@@ -270,16 +275,16 @@ bool nrf_TXtransmit(uint8_t *payload){
     nrf_bitwrite(0x07, 4, 1);       // clear MAX_RT flag bit on status register
     nrf_TXwrite(payload);           // writes on TX buffer the payload
 
-    gpio_set_level(PIN_CE, 0);      // disables radio so it can change its mode
-    nrf_bitwrite(0x00, 0, 0);       // changes mode to TX
-    gpio_set_level(PIN_CE, 1);      // enables radio again to transmit
-    delay_micro(tx_time);           // wait time enough for radio to transmit
+    ESP_ERROR_CHECK(gpio_set_level(PIN_CE, 0));     // disables radio so it can change its mode
+    nrf_bitwrite(0x00, 0, 0);                       // changes mode to TX
+    ESP_ERROR_CHECK(gpio_set_level(PIN_CE, 1));     // enables radio again to transmit
+    delay_micro(tx_time);                           // wait time enough for radio to transmit
 
     //while(nrf_bitread(0x07, 5) != 1);
 
-    gpio_set_level(PIN_CE, 0);      // disables radio so it can change its mode
-    nrf_bitwrite(0x00, 0, 1);       // changes mode to RX
-    gpio_set_level(PIN_CE, 1);      // enables radio in RX mode
+    ESP_ERROR_CHECK(gpio_set_level(PIN_CE, 0));     // disables radio so it can change its mode
+    nrf_bitwrite(0x00, 0, 1);                       // changes mode to RX
+    ESP_ERROR_CHECK(gpio_set_level(PIN_CE, 1));     // enables radio in RX mode
 
     if(nrf_bitread(0x07, 5) == 1){  // check if TX_DS flag bit was set (Data Sent TX FIFO)
         nrf_bitwrite(0x07, 5, 1);   // clears bit flag

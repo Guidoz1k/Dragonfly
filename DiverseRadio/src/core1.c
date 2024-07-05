@@ -25,6 +25,7 @@ void task_core1BASE(void){
             serial_write_byte(rx_buffer, HEX, true);
         }
     }
+
 }
 
 void task_core1DRONE(void){

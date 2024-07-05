@@ -2,9 +2,12 @@
 
 #include <stdio.h>
 #include <driver/uart.h>
+#include <esp_err.h>
 
 #define MAXSIZE 32
 #define MAXWAIT 50  // 10 milliseconds to read buffer
+
+static const char *TAG = "SERIAL DRIVER";
 
 uint8_t read_timeout = pdMS_TO_TICKS(10);
 
@@ -19,9 +22,11 @@ void serial_setup(){
         .source_clk = UART_SCLK_DEFAULT,
     };
 
-    uart_set_pin(UART_NUM_0, 43, 44, -1, -1);
-    uart_param_config(UART_NUM_0, &configs);
-    uart_driver_install(UART_NUM_0, 2048, 0, 0, NULL, 0);
+    ESP_ERROR_CHECK(uart_set_pin(UART_NUM_0, 43, 44, -1, -1));
+    ESP_ERROR_CHECK(uart_param_config(UART_NUM_0, &configs));
+    ESP_ERROR_CHECK(uart_driver_install(UART_NUM_0, 2048, 0, 0, NULL, 0));
+
+    ESP_LOGI(TAG, "Serial  initialized");
 }
 
 uint8_t serial_write_word(uint32_t number, uint8_t size, bool newline){

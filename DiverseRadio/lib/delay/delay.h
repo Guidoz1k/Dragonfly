@@ -1,6 +1,7 @@
 #ifndef __DELAY_H
 #define __DELAY_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 void delay_milli(uint16_t period);

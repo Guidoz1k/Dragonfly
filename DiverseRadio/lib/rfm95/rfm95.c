@@ -4,6 +4,7 @@
 #include <driver/gpio.h>
 #include <hal/spi_types.h>
 #include <driver/spi_master.h>
+#include <esp_err.h>
 
 #include "delay.h"
 
@@ -24,6 +25,8 @@
 
 // ========== Global Variables ==========
 
+static const char *TAG = "nRF24L01+";
+
 spi_device_handle_t spi_device;
 
 // INTERNAL SPI FUNCTIONS
@@ -40,7 +43,7 @@ uint8_t rfm_read_reg(uint8_t reg){
         .rx_buffer = rx_data,
     };
 
-    spi_device_polling_transmit(spi_device, &transaction);
+    ESP_ERROR_CHECK(spi_device_polling_transmit(spi_device, &transaction));
     return rx_data[1];
 }
 
@@ -54,7 +57,7 @@ void rfm_write_reg(uint8_t reg, uint8_t data){
         .tx_buffer = buffer,
     };
 
-    spi_device_polling_transmit(spi_device, &transaction);
+    ESP_ERROR_CHECK(spi_device_polling_transmit(spi_device, &transaction));
 }
 
 bool rfm_bitread(uint8_t address, uint8_t bit){
@@ -118,26 +121,28 @@ void rfm_setup(void){
     };
 
     // Initialize the SPI bus
-    spi_bus_initialize(SPI_CH, &buscfg, SPI_DMA_CH_AUTO);
+    ESP_ERROR_CHECK(spi_bus_initialize(SPI_CH, &buscfg, SPI_DMA_CH_AUTO));
     // Attach the radio to the SPI bus
-    spi_bus_add_device(SPI_CH, &devcfg, &spi_device);
+    ESP_ERROR_CHECK(spi_bus_add_device(SPI_CH, &devcfg, &spi_device));
 
     // GPIO config commands
-    gpio_config(&outputs);
-    gpio_set_level(PIN_RESET, 1);
-    gpio_set_level(PIN_DIO0, 0);
-    gpio_set_level(PIN_DIO1, 0);
-    gpio_set_level(PIN_DIO2, 0);
-    gpio_set_level(PIN_DIO3, 0);
-    gpio_set_level(PIN_DIO4, 0);
-    gpio_set_level(PIN_DIO5, 0);
+    ESP_ERROR_CHECK(gpio_config(&outputs));
+    ESP_ERROR_CHECK(gpio_set_level(PIN_RESET, 1));
+    ESP_ERROR_CHECK(gpio_set_level(PIN_DIO0, 0));
+    ESP_ERROR_CHECK(gpio_set_level(PIN_DIO1, 0));
+    ESP_ERROR_CHECK(gpio_set_level(PIN_DIO2, 0));
+    ESP_ERROR_CHECK(gpio_set_level(PIN_DIO3, 0));
+    ESP_ERROR_CHECK(gpio_set_level(PIN_DIO4, 0));
+    ESP_ERROR_CHECK(gpio_set_level(PIN_DIO5, 0));
 
     // reset
-    gpio_set_level(PIN_RESET, 0);
+    ESP_ERROR_CHECK(gpio_set_level(PIN_RESET, 0));
     delay_milli(10);
-    gpio_set_level(PIN_RESET, 1);
+    ESP_ERROR_CHECK(gpio_set_level(PIN_RESET, 1));
     delay_milli(10);
 
+
+    ESP_LOGI(TAG, "RFM95W initialized");
 /*  REGISTERS config
 
     // Put the device in standby mode
@@ -179,7 +184,7 @@ void rfm_frequency(uint32_t freq){
 }
 
 // Transmits packet and returns to RX mode
-bool nrf_TXtransmit(uint8_t *payload){
+bool rfm_TXtransmit(uint8_t *payload){
 /*
 void rfm95w_transmit(uint8_t *data, uint8_t length) {
     // Put the device in standby mode

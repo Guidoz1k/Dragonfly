@@ -11,6 +11,7 @@
 #ifndef __LED
 #define __LED
 
+#include <stdbool.h>
 #include <stdint.h>
 
 void led_setup(void);

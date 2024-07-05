@@ -1,6 +1,7 @@
 #ifndef __ATC_H
 #define __ATC_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 char command[] = {

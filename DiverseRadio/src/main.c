@@ -70,6 +70,16 @@ void task_core0(void){
         uint8_t g_output = 0;
         uint8_t b_output = 0;
         uint8_t dimmer = 30;
+    
+        uint8_t i;
+
+        delay_milli(2000);
+        for(i = 0x0C; i <= 0x23; i++){
+            serial_write_string("REG: ", false);
+            serial_write_byte(i, HEX, false);
+            serial_write_string(" = ", false);
+            serial_write_byte(rfm_read_reg(i), HEX, true);
+        }
 
         while(1){
             switch(mode){

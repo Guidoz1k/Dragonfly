@@ -39,6 +39,19 @@ static uint8_t payload_size = 1;    // size of the payload in one single transmi
 
 // ============ INTERNAL FUNCTIONS ============
 
+static void gpio_init(void){
+    gpio_config_t outputs = {
+        .pin_bit_mask = (uint64_t)1 << PIN_CE,
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE,
+    };
+
+    ESP_ERROR_CHECK(gpio_config(&outputs));
+    ESP_ERROR_CHECK(gpio_set_level(PIN_CE, 1));
+}
+
 static uint8_t nrf_read_reg(uint8_t reg){
     uint8_t tx_data[2] = {
         reg,
@@ -147,7 +160,6 @@ static void nrf_RXflush(void){
 
 // Mandatory setup initialization function
 void nrf_setup(bool test){
-    // SPI variables
     spi_bus_config_t buscfg = {
         .miso_io_num = PIN_MISO,
         .mosi_io_num = PIN_MOSI,
@@ -162,23 +174,13 @@ void nrf_setup(bool test){
         .spics_io_num = PIN_CS,                 // CS pin
         .queue_size = 7,
     };
-    // GPIO config variables
-    gpio_config_t outputs = {
-        .pin_bit_mask = (uint64_t)1 << PIN_CE,
-        .mode = GPIO_MODE_OUTPUT,
-        .pull_up_en = GPIO_PULLUP_DISABLE,
-        .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .intr_type = GPIO_INTR_DISABLE,
-    };
 
     // Initialize the SPI bus
     ESP_ERROR_CHECK(spi_bus_initialize(SPI_CH, &buscfg, SPI_DMA_CH_AUTO));
     // Attach the radio to the SPI bus
     ESP_ERROR_CHECK(spi_bus_add_device(SPI_CH, &devcfg, &spi_device));
 
-    // GPIO config commands
-    ESP_ERROR_CHECK(gpio_config(&outputs));
-    ESP_ERROR_CHECK(gpio_set_level(PIN_CE, 1));
+    gpio_init(); // gpio configuration for the CE pin
 
     delay_milli(100);
     nrf_payload_size(payload_size);

@@ -8,36 +8,72 @@ volatile uint64_t time_counter = 0;
 
 // ============ CORE FUNCTIONS ============
 
+void debug(void){
+    uint8_t i = 0;
+    static uint8_t old_vals[71] = {0};
+    uint8_t new_vals[71] = {0};
+    //static uint8_t old_gpios[4] = {0};
+    //uint8_t new_gpios[4] = {0};
+    //uint8_t gpios[4] = { 16, 17, 18, 8 };
+
+    for(i = 1; i <= 0x3F; i++){
+        if((i != 0x11) && (i != 0x1D)  && (i != 0x1E) && (i != 0x3C)){
+            new_vals[i] = rfm_read_reg(i);
+            if(new_vals[i] != old_vals[i]){
+                serial_write_string(" REG: ", false);
+                serial_write_byte(i, HEX, false);
+                serial_write_string("; OLD = ", false);
+                serial_write_byte(old_vals[i], BIN, false);
+                serial_write_string("; NEW = ", false);
+                serial_write_byte(new_vals[i], BIN, true);
+                old_vals[i] = new_vals[i];
+            }
+        }
+    }
+    /*
+    for(i = 0; i < 4; i++){
+        new_gpios[i] = !gpio_get_level(gpios[i]);
+        if(new_gpios[i] != old_gpios[i]){
+            serial_write_string(" DIO: ", false);
+            serial_write_byte(i, DEC, false);
+            serial_write_string("; OLD = ", false);
+            serial_write_byte(new_gpios[i], DEC, false);
+            serial_write_string("; NEW = ", false);
+            serial_write_byte(old_gpios[i], DEC, true);
+            old_gpios[i] = new_gpios[i];
+        }
+    }
+    */
+}
+
 // core 1 asynchronous task
 void task_core1(void){
     #ifdef ENV_BASE
-        uint8_t tx_buffer = 0x77;
-        uint8_t rx_buffer = 0;
-        uint8_t timeout_counter = 0;
-        bool received = false;
-
-        delay_milli(2000);
-
         while(1){
-            timeout_counter = 0;
-            received = false;
-        
-            nrf_TXtransmit(&tx_buffer);
-            while( (received == false) && (timeout_counter < 10) ){
-                received = nrf_RXreceive(&rx_buffer);
-                delay_milli(100);
-                timeout_counter++;
-            }
-            if(received == false)
-                serial_write_string(" TIME OUT! ", true);
-            else{
-                serial_write_string(" MESSAGE RECEIVED: ", false);
-                serial_write_byte(rx_buffer, HEX, true);
-            }
+            delay_milli(1000);
         }
     #elif ENV_DRONE
+        uint8_t rx_buffer = 0;
+
         while(1){
-            delay_milli(100);
+            debug();
+            if(rfm_bitread(0x3E, 1) == true){
+                serial_write_string(" PREAMBLE ", true);
+                rfm_bitwrite(0x3E, 1, 1);
+            }
+            if(rfm_bitread(0x3E, 0) == true){
+                serial_write_string(" SYNC ", true);
+            }
+            if(rfm_bitread(0x3F, 1) == true){
+                serial_write_string(" CRC TRUE ", true);
+                if(rfm_bitread(0x3F, 2) == true){
+                    serial_write_string(" PAYLOAD: ", false);
+                    rfm_RXreceive(&rx_buffer);
+                    serial_write_byte(rx_buffer, HEX, true);
+                }
+            }
+
+            delay_tick();
         }
     #endif
 }
@@ -61,62 +97,23 @@ bool IRAM_ATTR timer_core1(gptimer_handle_t timer, const gptimer_alarm_event_dat
 // core 0 asynchronous task
 void task_core0(void){
     #ifdef ENV_BASE
-        enum {
-            RED = 0,
-            GREEN = 1,
-            BLUE = 2,
-        } mode = GREEN;
-        uint8_t r_output = 255;
-        uint8_t g_output = 0;
-        uint8_t b_output = 0;
-        uint8_t dimmer = 30;
-    
-        uint8_t i;
+        uint8_t tx_buffer = 0x69;
 
-        delay_milli(2000);
-        for(i = 0x0C; i <= 0x23; i++){
-            serial_write_string("REG: ", false);
-            serial_write_byte(i, HEX, false);
-            serial_write_string(" = ", false);
-            serial_write_byte(rfm_read_reg(i), HEX, true);
-        }
+        debug();
+
+        serial_write_string(" ready? \n ", false);
+        while(serial_read_singlechar() != 'y')
+            delay_milli(10);
+        serial_write_string(" LESGO ", true);
 
         while(1){
-            switch(mode){
-            case RED:
-                led_color(r_output++ / dimmer, 0 / dimmer, b_output-- / dimmer);
-                if(r_output == 255)
-                    mode = GREEN;
-                break;
-            case GREEN:
-                led_color(r_output-- / dimmer, g_output++ / dimmer, 0 / dimmer);
-                if(g_output == 255)
-                    mode = BLUE;
-                break;
-            case BLUE:
-                led_color(0 / dimmer, g_output-- / dimmer, b_output++ / dimmer);
-                if(b_output == 255)
-                    mode = RED;
-                break;
-            }
-            delay_milli(10);
+            debug();
+            rfm_TXtransmit(&tx_buffer);
+            delay_milli(1000);
         }
     #elif ENV_DRONE
-        uint8_t tx_buffer = 0;
-        uint8_t rx_buffer = 0;
-
-        delay_milli(1000);
-        serial_write_string(" READY TO RECEIVE ", true);
-
-        while(1){    
-            while(nrf_RXreceive(&rx_buffer) == false)
-                delay_milli(10);
-            if(rx_buffer == 0x77){
-                serial_write_string(" MESSAGE RECEIVED: ", false);
-                serial_write_byte(rx_buffer, HEX, true);
-                tx_buffer = 0xF0;
-            }
-            nrf_TXtransmit(&tx_buffer);
+        while(1){
+            delay_milli(1000);
         }
     #endif
 }
@@ -228,7 +225,7 @@ void app_main(){
     serial_setup();
     nrf_setup(BENCHTESTING);
     rfm_setup(BENCHTESTING);
-    timer_core0_setup(); // interrupts disabled on core 0, for "bitbanging the led" reasons
+    timer_core0_setup();
 
     // core 1 task creation
     xTaskCreatePinnedToCore(core1Task, "timer1Creator", 10000, NULL, 1, NULL, 1);

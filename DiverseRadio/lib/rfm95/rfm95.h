@@ -22,6 +22,8 @@ void rfm_RXread(uint8_t *payload);
 
 void rfm_setup(bool test);
 
+uint8_t returns_regs(uint8_t *pointer);
+
 void rfm_channel(uint8_t channel);
 
 void rfm_payload_size(uint8_t packets);

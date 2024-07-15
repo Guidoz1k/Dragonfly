@@ -14,7 +14,7 @@
 
 // ========== GLOBAL VARIABLES ==========
 
-static const char *TAG = "SERIAL DRIVER";   // esp_err variable
+static const char *TAG = "UART0";   // esp_err variable
 
 static uint8_t read_timeout = pdMS_TO_TICKS(10);    // UART reading timeout
 

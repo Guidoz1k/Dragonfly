@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+void delay_tick(void);
+
 void delay_milli(uint16_t period);
 
 void delay_micro(uint32_t microseconds);

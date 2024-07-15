@@ -143,6 +143,7 @@ void led_setup(void){
     };
 
     ESP_ERROR_CHECK(dedic_gpio_new_bundle(&bundle_config, &gpio_bundle));
+    led_color(0, 0, 0);
     ESP_LOGI(TAG, "LED initialized");
 }
 

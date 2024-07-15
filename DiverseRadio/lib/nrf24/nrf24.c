@@ -21,6 +21,7 @@
 #define PIN_CLK     11
 #define PIN_CS      12
 #define PIN_CE      13
+#define PIN_IRQ     14
 
 #define STANDARDCH  0x3F
 
@@ -188,7 +189,7 @@ void nrf_setup(bool test){
     nrf_write_reg(0x00, 0b01111111);    // power is on, complete CRC, no interrupt on IRQ pin, RX MODE
     nrf_write_reg(0x01, 0);             // NO AUTO ACK
     nrf_write_reg(0x02, 1);             // enable only data pipe 0
-    nrf_write_reg(0x03, 3);             // 3 bytes address
+    nrf_write_reg(0x03, 1);             // 3 bytes address
     nrf_write_reg(0x04, 0);             // disables re-transmits
 
     if(test == true)
@@ -216,6 +217,22 @@ void nrf_dump11reg(uint8_t *reg_p){
 }
 */
 
+/* configure the address
+void nrf_address(uint8_t *buffer, uint8_t length){
+    uint8_t tx_data[33] = {0};
+    spi_transaction_t transaction = {
+        .length = 8 + (8 * payload_size),
+        .tx_buffer = tx_data,
+    };
+    uint8_t i = 0;
+
+    tx_data[0] = 0x0A | 0x20;  // RX_ADDR_P0 register + write mask
+    for(i = 0; i < length; i++)
+        tx_data[i + 1] = buffer[i];
+    ESP_ERROR_CHECK(spi_device_polling_transmit(spi_device, &transaction));
+}
+*/
+
 // Change the channel from 0 to 127
 void nrf_channel(uint8_t channel){
     nrf_write_reg(0x05, channel & 0b01111111);
@@ -226,7 +243,7 @@ void nrf_payload_size(uint8_t packets){
     payload_size = packets;
 
 /*
-    t(x) = 130 us (PLL) + (1B Preample + 3B address + xB payload + 1B CRC)*8/ 0.25MBIT + 20 us for tolerance
+    t(x) = 130 us (PLL) + (1B preample + 3B address + xB payload + 1B CRC)*8/ 0.25MBIT + 20 us for tolerance
     t(x) = 130 + (5 + x) * 32 + 20
     t(x) = 340 + 5 * x
 */

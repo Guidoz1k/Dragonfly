@@ -45,6 +45,11 @@ the overhead fluctuates from approximately 0.75µs to 1.4µs
 
 // ============ EXTERNAL FUNCTIONS ============
 
+// yield the process just to slap the watchdog
+void delay_tick(void){
+    vTaskDelay(1);
+}
+
 // Masking of FreeRTOS delay function
 void delay_milli(uint16_t period){
     vTaskDelay(pdMS_TO_TICKS(period));

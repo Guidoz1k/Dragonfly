@@ -20,7 +20,7 @@ void rfm_RXread(uint8_t *payload);
 
 // ============ EXTERNAL SPI FUNCTIONS ============
 
-void rfm_setup(bool test);
+void rfm_setup(void);
 
 uint8_t returns_regs(uint8_t *pointer);
 

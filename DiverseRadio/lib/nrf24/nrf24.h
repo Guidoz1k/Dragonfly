@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-void nrf_setup(bool test);
+void nrf_setup(void);
 
 void nrf_channel(uint8_t channel);
 

@@ -20,13 +20,6 @@
 
 // ========== DEFINITIONS ==========
 
-// environment test for power transmission setup
-#ifdef ENV_BENCHTEST
-    #define BENCHTESTING true
-#else
-    #define BENCHTESTING false
-#endif
-
 #define PERIOD0     10      // interrupt period in µs
 #define SYNCPIN0    47      // interruption 0 work pin
 #define PERIOD1     100     // interrupt period in µs

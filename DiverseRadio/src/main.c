@@ -56,23 +56,14 @@ void task_core1(void){
         uint8_t rx_buffer = 0;
 
         while(1){
-            debug();
-            if(rfm_bitread(0x3E, 1) == true){
-                serial_write_string(" PREAMBLE ", true);
-                rfm_bitwrite(0x3E, 1, 1);
+            if(rfm_RXreceive(&rx_buffer) == true){
+                serial_write_string(" RFM95: ", false);
+                serial_write_byte(rx_buffer, HEX, true);
             }
-            if(rfm_bitread(0x3E, 0) == true){
-                serial_write_string(" SYNC ", true);
+            if(nrf_RXreceive(&rx_buffer) == true){
+                serial_write_string(" nRF24: ", false);
+                serial_write_byte(rx_buffer, HEX, true);
             }
-            if(rfm_bitread(0x3F, 1) == true){
-                serial_write_string(" CRC TRUE ", true);
-                if(rfm_bitread(0x3F, 2) == true){
-                    serial_write_string(" PAYLOAD: ", false);
-                    rfm_RXreceive(&rx_buffer);
-                    serial_write_byte(rx_buffer, HEX, true);
-                }
-            }
-
             delay_tick();
         }
     #endif
@@ -99,20 +90,19 @@ void task_core0(void){
     #ifdef ENV_BASE
         uint8_t tx_buffer = 0x69;
 
-        debug();
-
         serial_write_string(" ready? \n ", false);
         while(serial_read_singlechar() != 'y')
             delay_milli(10);
         serial_write_string(" LESGO ", true);
 
         while(1){
-            debug();
             rfm_TXtransmit(&tx_buffer);
-            delay_milli(1000);
+            tx_buffer++;
+            delay_milli(250);
         }
     #elif ENV_DRONE
         while(1){
+            led_color(0, 0, 0);
             delay_milli(1000);
         }
     #endif
@@ -223,8 +213,8 @@ void app_main(){
     delay_milli(1000);
     led_setup();
     serial_setup();
-    nrf_setup(BENCHTESTING);
-    rfm_setup(BENCHTESTING);
+    nrf_setup();
+    rfm_setup();
     timer_core0_setup();
 
     // core 1 task creation

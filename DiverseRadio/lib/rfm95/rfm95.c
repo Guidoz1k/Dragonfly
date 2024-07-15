@@ -216,7 +216,7 @@ static void rfm_frequency_deviation(uint32_t freq){
 // ============ EXTERNAL SPI FUNCTIONS ============
 
 // Mandatory setup initialization function
-void rfm_setup(bool test){
+void rfm_setup(void){
     spi_bus_config_t buscfg = {
         .miso_io_num = PIN_MISO,
         .mosi_io_num = PIN_MOSI,
@@ -240,24 +240,23 @@ void rfm_setup(bool test){
     gpio_init_and_reset(); // gpio configuration and radio reset
 
     rfm_write_reg(0x01, 0b00000001);    // FSK mode, high frequency, radio is in STAND BY
-    rfm_frequency_carrier(902000000);
+    rfm_frequency_carrier(928 *1000 * 1000);
     //rfm_bitwrite(0x24, 3, 1);           // calibrates chip after frequency change to HF
 
-    rfm_write_reg(0x0C, 0b00100000);
+    rfm_write_reg(0x09, 0xFF);
+    rfm_write_reg(0x0C, 0x20);
     rfm_write_reg(0x0D, 0x80);  // RegRxConfig: auto restart, no AGC, no AFC
 
 
     rfm_write_reg(0x1F, 0xAA);  // preambles
     rfm_write_reg(0x26, 0x03);
 
-    rfm_write_reg(0x27, 0b10010001);
+    rfm_write_reg(0x27, 0x91);
 
-    rfm_write_reg(0x30, 0x18);
+    rfm_write_reg(0x30, 0x10);
     rfm_write_reg(0x31, 0x40);
     rfm_write_reg(0x32, 1);
     rfm_write_reg(0x35, 0x80);
-
-    rfm_write_reg(0x09, 0xFF);
 
 /*
     // common registers

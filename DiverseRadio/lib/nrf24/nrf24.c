@@ -23,8 +23,6 @@
 #define PIN_CE      13
 #define PIN_IRQ     14
 
-#define STANDARDCH  0x3F
-
 // ========== GLOBAL VARIABLES ==========
 
 static const char *TAG = "nRF24L01+";   // esp_err variable
@@ -160,7 +158,7 @@ static void nrf_RXflush(void){
 // ============ EXTERNAL SPI FUNCTIONS ============
 
 // Mandatory setup initialization function
-void nrf_setup(bool test){
+void nrf_setup(void){
     spi_bus_config_t buscfg = {
         .miso_io_num = PIN_MISO,
         .mosi_io_num = PIN_MOSI,
@@ -185,17 +183,14 @@ void nrf_setup(bool test){
 
     delay_milli(100);
     nrf_payload_size(payload_size);
-    nrf_channel(STANDARDCH);
+    nrf_channel(0xFF);
     nrf_write_reg(0x00, 0b01111111);    // power is on, complete CRC, no interrupt on IRQ pin, RX MODE
     nrf_write_reg(0x01, 0);             // NO AUTO ACK
     nrf_write_reg(0x02, 1);             // enable only data pipe 0
     nrf_write_reg(0x03, 1);             // 3 bytes address
     nrf_write_reg(0x04, 0);             // disables re-transmits
 
-    if(test == true)
-        nrf_write_reg(0x06, 0b00100000);    // RF data rate of 250kbps, minimum TX power for bench test
-    else
-        nrf_write_reg(0x06, 0b00100110);    // RF data rate of 250kbps, maximum TX power for field test
+    nrf_write_reg(0x06, 0b00100110);    // RF data rate of 250kbps, maximum TX power
 
     nrf_write_reg(0x07, 0b01111110);    // clear status
     nrf_TXflush();

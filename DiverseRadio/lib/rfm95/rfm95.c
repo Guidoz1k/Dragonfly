@@ -33,7 +33,7 @@ static const char *TAG = "RFM95W";   // esp_err variable
 
 static spi_device_handle_t spi_device;  // esp_err variable
 
-/* 350µs is the maximum allowed time to transmit a single byte
+/* 780µs is the maximum allowed time to transmit a single byte
    t(x) = 130 us (PLL) + (1B Preample + 1B sync word + 1B address + xB payload + 2B CRC)*8/ 0.25MBIT = 130 + 192 us (x = 1) = 322 us.
    the ammount of bytes per payload determines the transmission time therefore the payload setting functions also sets tx_time
 */
@@ -75,7 +75,7 @@ static void gpio_init_and_reset(void){
     delay_milli(10);
 }
 
-/*static*/ uint8_t rfm_read_reg(uint8_t reg){
+static uint8_t rfm_read_reg(uint8_t reg){
     uint8_t tx_data[2] = {
         reg & 0x7F,  // MSB clear for read
         0xFF
@@ -91,7 +91,7 @@ static void gpio_init_and_reset(void){
     return rx_data[1];
 }
 
-/*static*/ void rfm_write_reg(uint8_t reg, uint8_t data){
+static void rfm_write_reg(uint8_t reg, uint8_t data){
     uint8_t buffer[2] = {
         reg | 0x80,  // MSB set for write
         data
@@ -104,7 +104,7 @@ static void gpio_init_and_reset(void){
     ESP_ERROR_CHECK(spi_device_polling_transmit(spi_device, &transaction));
 }
 
-/*static*/ bool rfm_bitread(uint8_t address, uint8_t bit){
+static bool rfm_bitread(uint8_t address, uint8_t bit){
     uint8_t data = 0;
     bool bitread = false;
 
@@ -118,7 +118,7 @@ static void gpio_init_and_reset(void){
     return bitread;
 }
 
-/*static*/ void rfm_bitwrite(uint8_t address, uint8_t bit, bool value){
+static void rfm_bitwrite(uint8_t address, uint8_t bit, bool value){
     uint8_t data = 0;
 
     data = rfm_read_reg(address);
@@ -247,47 +247,19 @@ void rfm_setup(void){
     rfm_write_reg(0x1F, 0xAA);  // 2 preamble bytes to detect
     rfm_write_reg(0x26, 0x03);  // 3 preamble bytes sent
 
-    rfm_write_reg(0x09, 0xFF);
-    rfm_write_reg(0x0C, 0x20);
-    rfm_write_reg(0x0D, 0x80);  // RegRxConfig: auto restart, no AGC, no AFC
-
-
-
-
-    rfm_write_reg(0x27, 0x91);
-
-    rfm_write_reg(0x30, 0x10);
-    rfm_write_reg(0x31, 0x40);
-    rfm_write_reg(0x32, 1);
-    rfm_write_reg(0x35, 0x80);
-
     rfm_write_reg(0x4D, 0x07);  // PA boost
+    rfm_write_reg(0x09, 0xFF);  // PA MAXIMUM POWER
+    rfm_write_reg(0x0C, 0x23);  // highest LNA gain, HF LNA BOOST
 
-/*
-    // common registers
+    rfm_write_reg(0x0D, 0x80);  // RegRxConfig: auto restart, no AGC, no AFC
+    rfm_write_reg(0x27, 0x91);  // auto RX restart, 2 SYNC bytes sent
+
+    rfm_write_reg(0x30, 0x10);  // fixed lenght packet, CRC ON, CRC auto clear, NO ADDRESS
+    rfm_write_reg(0x31, 0x40);  // packet mode, IoT disabled
+
+    rfm_write_reg(0x35, 0x80);  //  TX start condition
+
     rfm_payload_size(1);
-
-    // TX registers
-    if(test == true)
-        rfm_write_reg(0x09, 0x4F);  // minimum(standard) TX power for bench test
-    else
-        rfm_write_reg(0x09, 0xFF);  // maximum TX power for field test
-
-    // RX registers
-    rfm_write_reg(0x0C, 0x23);  // LNA on highest gain, with boost on
-    rfm_write_reg(0x0E, 0x00);  // RSSI smoothing set to minimum
-    rfm_write_reg(0x12, 0x01);  // required RxBw values for 250kHz FSK bandwidth
-
-    // RC Oscillator register
-    rfm_write_reg(0x24, 0x07);  // CLKOUT is disabled
-
-    // Packet Handling registers
-    rfm_write_reg(0x26, 0x01);  // 1B for preamble
-    rfm_write_reg(0x27, 0x90);  // keeps autorestart for RX but changes syncsize to 1
-    rfm_write_reg(0x30, 0x12);  // fixed lenght packet mode, no encoding, CRC on, clear FIFO when wrong CRC is received, address checking turned on
-    rfm_write_reg(0x31, 0x40);  // packet mode, no IoT compatibility
-    rfm_write_reg(0x35, 0x8F);  // TX starts transmission as soon as FIFO has data
-//*/
     rfm_bitwrite(0x3B, 6, 1);   // image calibration
     delay_milli(20);            // calibration delay
     rfm_mode_activeRX();
@@ -321,14 +293,12 @@ void rfm_channel(uint8_t channel){
 
 // Change the packet size and configure the correct time for TX to transmit
 void rfm_payload_size(uint8_t packets){
-    payload_size = packets + 1; // address is included on payload size count
+    payload_size = packets; // address is included on payload size count
 
-/*
-    t(x) = 80 us (PLL) + (3B preample + 2B sync word + 0B address + xB payload + 2B CRC)*8/ 0.1MBIT + 20 us for tolerance
-    t(x) = 80 + (7 + x) * 80 + 20
-    t(x) ~= 660 + 80 * x
-*/
-    tx_time = 660 + 80 * packets;
+// t(x) = 130 us (PLL) + (3B preample + 2B sync word + 0B address + xB payload + 2B CRC)*8/ 0.1MBIT + 20 us for tolerance
+// t(x) = 130 + (7 + x) * 80 + 20
+// t(x) ~= 710 + 80 * x
+    tx_time = 710 + 80 * packets;
 
     rfm_write_reg(0x32, payload_size & 0b00111111); // artificial limit of 63 messages
 }

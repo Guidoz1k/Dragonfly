@@ -8,44 +8,6 @@ volatile uint64_t time_counter = 0;
 
 // ============ CORE FUNCTIONS ============
 
-void debug(void){
-    uint8_t i = 0;
-    static uint8_t old_vals[71] = {0};
-    uint8_t new_vals[71] = {0};
-    //static uint8_t old_gpios[4] = {0};
-    //uint8_t new_gpios[4] = {0};
-    //uint8_t gpios[4] = { 16, 17, 18, 8 };
-
-    for(i = 1; i <= 0x3F; i++){
-        if((i != 0x11) && (i != 0x1D)  && (i != 0x1E) && (i != 0x3C)){
-            new_vals[i] = rfm_read_reg(i);
-            if(new_vals[i] != old_vals[i]){
-                serial_write_string(" REG: ", false);
-                serial_write_byte(i, HEX, false);
-                serial_write_string("; OLD = ", false);
-                serial_write_byte(old_vals[i], BIN, false);
-                serial_write_string("; NEW = ", false);
-                serial_write_byte(new_vals[i], BIN, true);
-                old_vals[i] = new_vals[i];
-            }
-        }
-    }
-    /*
-    for(i = 0; i < 4; i++){
-        new_gpios[i] = !gpio_get_level(gpios[i]);
-        if(new_gpios[i] != old_gpios[i]){
-            serial_write_string(" DIO: ", false);
-            serial_write_byte(i, DEC, false);
-            serial_write_string("; OLD = ", false);
-            serial_write_byte(new_gpios[i], DEC, false);
-            serial_write_string("; NEW = ", false);
-            serial_write_byte(old_gpios[i], DEC, true);
-            old_gpios[i] = new_gpios[i];
-        }
-    }
-    */
-}
-
 // core 1 asynchronous task
 void task_core1(void){
     #ifdef ENV_BASE
@@ -88,19 +50,20 @@ void task_core0(void){
         serial_write_string(" LESGO ", true);
 
         while(1){
-            if(tx_buffer < 250){
+            if(tx_buffer < 255){
                 serial_write_byte(tx_buffer, HEX, true);
                 rfm_TXtransmit(&tx_buffer);
                 tx_buffer++;
             }
-            delay_milli(500);
+            delay_milli(100);
         }
     #elif ENV_DRONE
-        static uint8_t rx_old = 255, rx_new = 0;
-        static uint8_t counter = 0, loss = 0;
+        static uint8_t rx_old = 255;
+        static uint8_t rx_new = 0, counter = 0, loss = 0;
     
         while(1){
             if(rfm_RXreceive(&rx_new) == true){
+                
                 counter++;
                 if(rx_new != (rx_old + 1)){
                     loss += rx_new - (rx_old + 1);
@@ -110,6 +73,8 @@ void task_core0(void){
                     serial_write_byte(counter, DEC, true);
                 }
                 rx_old = rx_new;
+                
+                //serial_write_byte(rx_new, HEX, true);
             }
             delay_tick();
         }

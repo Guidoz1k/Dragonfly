@@ -50,21 +50,13 @@ void debug(void){
 void task_core1(void){
     #ifdef ENV_BASE
         while(1){
+            led_color(0, 0, 0);
             delay_milli(1000);
         }
     #elif ENV_DRONE
-        uint8_t rx_buffer = 0;
-
         while(1){
-            if(rfm_RXreceive(&rx_buffer) == true){
-                serial_write_string(" RFM95: ", false);
-                serial_write_byte(rx_buffer, HEX, true);
-            }
-            if(nrf_RXreceive(&rx_buffer) == true){
-                serial_write_string(" nRF24: ", false);
-                serial_write_byte(rx_buffer, HEX, true);
-            }
-            delay_tick();
+            led_color(0, 0, 0);
+            delay_milli(1000);
         }
     #endif
 }
@@ -88,7 +80,7 @@ bool IRAM_ATTR timer_core1(gptimer_handle_t timer, const gptimer_alarm_event_dat
 // core 0 asynchronous task
 void task_core0(void){
     #ifdef ENV_BASE
-        uint8_t tx_buffer = 0x69;
+        uint8_t tx_buffer = 0;
 
         serial_write_string(" ready? \n ", false);
         while(serial_read_singlechar() != 'y')
@@ -96,14 +88,30 @@ void task_core0(void){
         serial_write_string(" LESGO ", true);
 
         while(1){
-            rfm_TXtransmit(&tx_buffer);
-            tx_buffer++;
-            delay_milli(250);
+            if(tx_buffer < 250){
+                serial_write_byte(tx_buffer, HEX, true);
+                rfm_TXtransmit(&tx_buffer);
+                tx_buffer++;
+            }
+            delay_milli(500);
         }
     #elif ENV_DRONE
+        static uint8_t rx_old = 255, rx_new = 0;
+        static uint8_t counter = 0, loss = 0;
+    
         while(1){
-            led_color(0, 0, 0);
-            delay_milli(1000);
+            if(rfm_RXreceive(&rx_new) == true){
+                counter++;
+                if(rx_new != (rx_old + 1)){
+                    loss += rx_new - (rx_old + 1);
+                    serial_write_string(" LOSS: ", false);
+                    serial_write_byte(loss, DEC, false);
+                    serial_write_string(" / ", false);
+                    serial_write_byte(counter, DEC, true);
+                }
+                rx_old = rx_new;
+            }
+            delay_tick();
         }
     #endif
 }

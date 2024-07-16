@@ -14,10 +14,6 @@ bool rfm_bitread(uint8_t address, uint8_t bit);
 
 void rfm_bitwrite(uint8_t address, uint8_t bit, bool value);
 
-void rfm_TXwrite(uint8_t *payload);
-
-void rfm_RXread(uint8_t *payload);
-
 // ============ EXTERNAL SPI FUNCTIONS ============
 
 void rfm_setup(void);

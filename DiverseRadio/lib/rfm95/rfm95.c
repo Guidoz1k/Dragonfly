@@ -129,7 +129,7 @@ static void gpio_init_and_reset(void){
     rfm_write_reg(address, data);
 }
 
-/*static*/ void rfm_TXwrite(uint8_t *payload){
+static void rfm_TXwrite(uint8_t *payload){
     uint8_t tx_data[33] = {0};
     spi_transaction_t transaction = {
         .length = 8 + (8 * payload_size),
@@ -143,7 +143,7 @@ static void gpio_init_and_reset(void){
     ESP_ERROR_CHECK(spi_device_polling_transmit(spi_device, &transaction));
 }
 
-/*static*/ void rfm_RXread(uint8_t *payload){
+static void rfm_RXread(uint8_t *payload){
     uint8_t tx_data[33] = {0};
     uint8_t rx_data[33] = {0};
     spi_transaction_t transaction = {
@@ -158,8 +158,9 @@ static void gpio_init_and_reset(void){
         payload[i] = rx_data[i + 1];
 }
 
-/*
 static void rfm_bitrate(uint32_t bitrate){
+// bit rate = FXOSC / bit rate reg
+// bit rate reg = 32000000 / bit rate
     uint32_t temp_br;   // bit rate
 
     if( (bitrate > 0) && (bitrate <= 300000ul) ){
@@ -170,18 +171,12 @@ static void rfm_bitrate(uint32_t bitrate){
 
         delay_micro(150);
     }
-
-    rfm_write_reg(0x02, 0x00);  // MSB of bit rate (FXOSX = 32MHz)
-    rfm_write_reg(0x03, 0x80);  // LSB of bit rate (250kHz)
 }
-*/
 
 static void rfm_frequency_carrier(uint32_t freq){
-    /*
-    carrier frequency = step * freq_reg
-    step = 15625 / 256
-    freq_reg = carrier frequency / step
-    */
+// carrier frequency = step * freq_reg
+// step = 15625 / 256
+// freq_reg = carrier frequency / step
     uint64_t temp_freq;
 
     if( (freq >= 902000000ul) && (freq <= 928000000ul) ){
@@ -193,9 +188,9 @@ static void rfm_frequency_carrier(uint32_t freq){
 
         delay_micro(150);
     }
+
 }
 
-/*
 static void rfm_frequency_deviation(uint32_t freq){
 // frequency deviation = step * freq_reg
 // step = 15625 / 256
@@ -211,7 +206,6 @@ static void rfm_frequency_deviation(uint32_t freq){
         delay_micro(100);
     }
 }
-*/
 
 // ============ EXTERNAL SPI FUNCTIONS ============
 
@@ -241,15 +235,24 @@ void rfm_setup(void){
 
     rfm_write_reg(0x01, 0b00000001);    // FSK mode, high frequency, radio is in STAND BY
     rfm_frequency_carrier(928 *1000 * 1000);
-    //rfm_bitwrite(0x24, 3, 1);           // calibrates chip after frequency change to HF
+    rfm_bitwrite(0x24, 3, 1);           // calibrates chip after frequency change to HF
+
+    // To ensure correct modulation: Fdev + BR/2 <= 250kHz
+    // Beta = 2 * Fdev/BR
+    // 0.5 <= Beta <= 10
+    rfm_frequency_deviation(125 * 1000);
+    rfm_bitrate(100 * 1000);    // bit rate of 100kbps
+    rfm_write_reg(0x12, 0x01);  // RX Bw = 250kHz
+
+    rfm_write_reg(0x1F, 0xAA);  // 2 preamble bytes to detect
+    rfm_write_reg(0x26, 0x03);  // 3 preamble bytes sent
 
     rfm_write_reg(0x09, 0xFF);
     rfm_write_reg(0x0C, 0x20);
     rfm_write_reg(0x0D, 0x80);  // RegRxConfig: auto restart, no AGC, no AFC
 
 
-    rfm_write_reg(0x1F, 0xAA);  // preambles
-    rfm_write_reg(0x26, 0x03);
+
 
     rfm_write_reg(0x27, 0x91);
 
@@ -257,6 +260,8 @@ void rfm_setup(void){
     rfm_write_reg(0x31, 0x40);
     rfm_write_reg(0x32, 1);
     rfm_write_reg(0x35, 0x80);
+
+    rfm_write_reg(0x4D, 0x07);  // PA boost
 
 /*
     // common registers
@@ -319,16 +324,16 @@ void rfm_payload_size(uint8_t packets){
     payload_size = packets + 1; // address is included on payload size count
 
 /*
-    t(x) = 130 us (PLL) + (1B preample + 1B sync word + 1B address + xB payload + 2B CRC)*8/ 0.25MBIT + 20 us for tolerance
-    t(x) = 130 + (5 + x) * 32 + 20
-    t(x) = 340 + 5 * x
+    t(x) = 80 us (PLL) + (3B preample + 2B sync word + 0B address + xB payload + 2B CRC)*8/ 0.1MBIT + 20 us for tolerance
+    t(x) = 80 + (7 + x) * 80 + 20
+    t(x) ~= 660 + 80 * x
 */
-    tx_time = 340 + 5 * packets; // Coincidently it is the same for the nRF24L01+
+    tx_time = 660 + 80 * packets;
 
     rfm_write_reg(0x32, payload_size & 0b00111111); // artificial limit of 63 messages
 }
 
-/* configure the address
+/* configure the address (need also to check address verification config)
 void rfm_address(uint8_t address){
     rfm_write_reg(0x33, address);
 }
@@ -354,21 +359,16 @@ void rfm_mode_activeRX(void){
 bool rfm_TXtransmit(uint8_t *payload){
     bool success = false;
 
-    gpio_set_level(PIN_TEST, 0);
     rfm_mode_standby();
     rfm_TXwrite(payload);
-    gpio_set_level(PIN_TEST, 1);
     rfm_write_reg(0x01, 0b00000011); // radio is on TX mode
-    gpio_set_level(PIN_TEST, 0);
 
-    while(rfm_bitread(0x3F, 3) == 0);
-    
-    gpio_set_level(PIN_TEST, 1);
+    //while(rfm_bitread(0x3F, 3) == 0);
+    delay_micro(tx_time);
+
     if(rfm_bitread(0x3F, 3) == 1)   // check if TX_DS flag bit was set (Data Sent TX FIFO)
         success = true;             // returns true
     rfm_mode_activeRX();    // returns to RX and clears PACKETSENT flag
-
-    gpio_set_level(PIN_TEST, 0);
 
     return success;
 }
@@ -385,30 +385,3 @@ bool rfm_RXreceive(uint8_t *payload){
 
     return message_present;
 }
-
-/*
-void app_main() {
-    init_spi();
-    rfm95w_reset();
-    rfm95w_init();
-
-    uint8_t message[] = {0x48, 0x65, 0x6C, 0x6C, 0x6F};  // "Hello"
-    rfm95w_transmit(message, sizeof(message));
-
-    // Continuously check for received messages
-    uint8_t value;
-    while (1) {
-        rfm95w_read_register(0x12, &value); // Read IRQ flags
-        if (value & 0x40) { // RX done flag
-            uint8_t length;
-            rfm95w_read_register(0x13, &length); // Read RX payload length
-            for (int i = 0; i < length; i++) {
-                rfm95w_read_register(0x00, &value);
-                printf("Received: 0x%02X\n", value);
-            }
-            rfm95w_write_register(0x12, 0x40); // Clear RX done flag
-        }
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-}
-*/

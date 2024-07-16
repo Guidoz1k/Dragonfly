@@ -22,6 +22,13 @@
         "led.h": "c",
         "serial.h": "c",
         "cstdint": "c",
-        "esp_log.h": "c"
+        "esp_log.h": "c",
+        "array": "c",
+        "deque": "c",
+        "string": "c",
+        "unordered_map": "c",
+        "vector": "c",
+        "iterator": "c",
+        "string_view": "c"
     }
 }

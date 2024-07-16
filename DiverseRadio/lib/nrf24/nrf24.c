@@ -240,9 +240,9 @@ void nrf_payload_size(uint8_t packets){
 /*
     t(x) = 130 us (PLL) + (1B preample + 3B address + xB payload + 1B CRC)*8/ 0.25MBIT + 20 us for tolerance
     t(x) = 130 + (5 + x) * 32 + 20
-    t(x) = 340 + 5 * x
+    t(x) = 310 + 32 * x
 */
-    tx_time = 340 + 5 * packets;
+    tx_time = 310 + 32 * packets;
 
     nrf_write_reg(0x11, payload_size & 0b00111111);
 }

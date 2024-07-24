@@ -241,7 +241,7 @@ void rfm_setup(void){
     // Beta = 2 * Fdev/BR
     // 0.5 <= Beta <= 10
     rfm_frequency_deviation(125 * 1000);
-    rfm_bitrate(100 * 1000);    // bit rate of 100kbps
+    rfm_bitrate(50 * 1000);    // bit rate of 50kbps
     rfm_write_reg(0x12, 0x01);  // RX Bw = 250kHz
 
     rfm_write_reg(0x1F, 0xAA);  // 2 preamble bytes to detect
@@ -252,7 +252,7 @@ void rfm_setup(void){
     rfm_write_reg(0x0C, 0x23);  // highest LNA gain, HF LNA BOOST
 
     rfm_write_reg(0x0D, 0x80);  // RegRxConfig: auto restart, no AGC, no AFC
-    rfm_write_reg(0x27, 0x91);  // auto RX restart, 2 SYNC bytes sent
+    rfm_write_reg(0x27, 0x93);  // auto RX restart, 4 SYNC byte sent
 
     rfm_write_reg(0x30, 0x10);  // fixed lenght packet, CRC ON, CRC auto clear, NO ADDRESS
     rfm_write_reg(0x31, 0x40);  // packet mode, IoT disabled
@@ -295,10 +295,10 @@ void rfm_channel(uint8_t channel){
 void rfm_payload_size(uint8_t packets){
     payload_size = packets; // address is included on payload size count
 
-// t(x) = 130 us (PLL) + (3B preample + 2B sync word + 0B address + xB payload + 2B CRC)*8/ 0.1MBIT + 20 us for tolerance
-// t(x) = 130 + (7 + x) * 80 + 20
-// t(x) ~= 710 + 80 * x
-    tx_time = 710 + 80 * packets;
+// t(x) = 130 us (PLL) + (3B preample + 4B sync word + 0B address + xB payload + 2B CRC)*8/ 0.05MBIT + 20 us for tolerance
+// t(x) = 130 + (9 + x) * 160 + 20
+// t(x) ~= 1600 + 160 * x
+    tx_time = 1600 + 160 * packets;
 
     rfm_write_reg(0x32, payload_size & 0b00111111); // artificial limit of 63 messages
 }

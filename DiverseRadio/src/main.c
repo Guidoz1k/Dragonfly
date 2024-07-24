@@ -12,12 +12,10 @@ volatile uint64_t time_counter = 0;
 void task_core1(void){
     #ifdef ENV_BASE
         while(1){
-            led_color(0, 0, 0);
             delay_milli(1000);
         }
     #elif ENV_DRONE
         while(1){
-            led_color(0, 0, 0);
             delay_milli(1000);
         }
     #endif
@@ -43,40 +41,70 @@ bool IRAM_ATTR timer_core1(gptimer_handle_t timer, const gptimer_alarm_event_dat
 void task_core0(void){
     #ifdef ENV_BASE
         uint8_t tx_buffer = 0;
-
-        serial_write_string(" ready? \n ", false);
-        while(serial_read_singlechar() != 'y')
-            delay_milli(10);
-        serial_write_string(" LESGO ", true);
+        bool test = false;
 
         while(1){
-            if(tx_buffer < 255){
-                serial_write_byte(tx_buffer, HEX, true);
-                rfm_TXtransmit(&tx_buffer);
-                tx_buffer++;
+            serial_write_string(" ready? \n ", false);
+            while(serial_read_singlechar() != 'y')
+                delay_milli(10);
+            serial_write_string(" LESGO ", true);
+            test = true;
+            tx_buffer = 0;
+
+            while(test == true){
+                if(tx_buffer < 255){
+                    serial_write_byte(tx_buffer, HEX, true);
+                    rfm_TXtransmit(&tx_buffer);
+                    tx_buffer++;
+                }
+                else{
+                    test = false;
+                }
+                delay_milli(100);
             }
-            delay_milli(100);
         }
     #elif ENV_DRONE
         static uint8_t rx_old = 255;
         static uint8_t rx_new = 0, counter = 0, loss = 0;
+        static uint32_t timeout = 0;
+        bool test = false;
     
         while(1){
-            if(rfm_RXreceive(&rx_new) == true){
-                
-                counter++;
-                if(rx_new != (rx_old + 1)){
-                    loss += rx_new - (rx_old + 1);
-                    serial_write_string(" LOSS: ", false);
-                    serial_write_byte(loss, DEC, false);
-                    serial_write_string(" / ", false);
-                    serial_write_byte(counter, DEC, true);
+            rx_old = 255;
+            rx_new = 0;
+            counter = 0;
+            loss = 0;
+            timeout = 0;
+            test = true;
+            while(test == true){
+                if(rfm_RXreceive(&rx_new) == true){
+                    timeout = 0;
+                    counter++;
+                    if(rx_new != (rx_old + 1)){
+                        loss += rx_new - (rx_old + 1);
+                        serial_write_string(" LOSS: ", false);
+                        serial_write_byte(loss, DEC, false);
+                        serial_write_string(" / ", false);
+                        serial_write_byte(counter, DEC, true);
+                    }
+                    rx_old = rx_new;
+                    
+                    //serial_write_byte(rx_new, HEX, true);
                 }
-                rx_old = rx_new;
-                
-                //serial_write_byte(rx_new, HEX, true);
+                else{
+                    timeout++;
+                    if(timeout >= 1000ul){
+                        test = false;
+                    }
+                }
+                delay_tick();
             }
-            delay_tick();
+            serial_write_string(" TIMEOUT! ", true);
+            serial_write_string("total errors:", false);
+            serial_write_byte(loss, DEC, false);
+            serial_write_string("/", false);
+            serial_write_byte(0xFE, DEC, false);
+            serial_write_string(" Resetting... ", true);
         }
     #endif
 }

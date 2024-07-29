@@ -44,7 +44,7 @@ uint8_t serial_write_word(uint32_t number, uint8_t size, bool newline){
     uint8_t chars = 10;
     uint8_t i;
 
-    // convert the number to individual 
+    // convert the number to individual chars
     for(i = 0; i < 10; i++){
         buffer[9 - i] = number % 10 + 48;
         number /= 10;

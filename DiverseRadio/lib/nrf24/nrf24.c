@@ -183,7 +183,7 @@ void nrf_setup(void){
 
     delay_milli(100);
     nrf_payload_size(payload_size);
-    nrf_channel(0xFF);
+    nrf_channel(0x00);
     nrf_write_reg(0x00, 0b01111111);    // power is on, complete CRC, no interrupt on IRQ pin, RX MODE
     nrf_write_reg(0x01, 0);             // NO AUTO ACK
     nrf_write_reg(0x02, 1);             // enable only data pipe 0

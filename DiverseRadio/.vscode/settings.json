@@ -29,6 +29,11 @@
         "unordered_map": "c",
         "vector": "c",
         "iterator": "c",
-        "string_view": "c"
-    }
+        "string_view": "c",
+        "esp_timer.h": "c",
+        "stdbool.h": "c",
+        "esp_random.h": "c",
+        "bootloader_random.h": "c"
+    },
+    "C_Cpp.dimInactiveRegions": true
 }

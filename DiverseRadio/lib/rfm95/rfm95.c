@@ -234,7 +234,7 @@ void rfm_setup(void){
     gpio_init_and_reset(); // gpio configuration and radio reset
 
     rfm_write_reg(0x01, 0b00000001);    // FSK mode, high frequency, radio is in STAND BY
-    rfm_frequency_carrier(928 *1000 * 1000);
+    rfm_frequency_carrier(902 *1000 * 1000 + 200 * 1000);
     rfm_bitwrite(0x24, 3, 1);           // calibrates chip after frequency change to HF
 
     // To ensure correct modulation: Fdev + BR/2 <= 250kHz

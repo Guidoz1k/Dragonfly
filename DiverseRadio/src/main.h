@@ -17,12 +17,21 @@
 #include "rfm95.h"
 #include "serial.h"
 #include "led.h"
+#include "random.h"
 
 // ========== DEFINITIONS ==========
 
-#define PERIOD0     10      // interrupt period in µs
-#define SYNCPIN0    47      // interruption 0 work pin
-#define PERIOD1     100     // interrupt period in µs
+typedef enum _radio_t{  // radio identifier
+    RADIO_NRF24 = 1,
+    RADIO_RFM95 = 2,
+} radio_t;
+
+//#define PERIOD0     10      // interrupt period in µs
+//#define SYNCPIN0    47      // interruption 0 work pin
+#define PERIOD1     20      // interrupt period in µs
 #define SYNCPIN1    21      // interruption 1 work pin
+
+#define NRF_MAX     128     // number of channels of the nRF24 radio
+#define RFM_MAX     65      // number of channels of the RFM95 radio
 
 #endif /* __MAIN_H */

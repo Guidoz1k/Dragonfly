@@ -240,8 +240,8 @@ void rfm_setup(void){
     // To ensure correct modulation: Fdev + BR/2 <= 250kHz
     // Beta = 2 * Fdev/BR
     // 0.5 <= Beta <= 10
-    rfm_frequency_deviation(125 * 1000);
-    rfm_bitrate(50 * 1000);    // bit rate of 50kbps
+    rfm_frequency_deviation(150 * 1000);
+    rfm_bitrate(50 * 1000);    // bit rate
     rfm_write_reg(0x12, 0x01);  // RX Bw = 250kHz
 
     rfm_write_reg(0x1F, 0xAA);  // 2 preamble bytes to detect
@@ -275,7 +275,7 @@ uint8_t returns_regs(uint8_t *pointer){
 }
 
 /*
-    selects one of 64 channels created by the library
+    selects one of 65 channels created by the library
     the first is 200kHz apart from the 902MHz lower limit
     the last is 200kHz apart from the 928MHz upper limit
     the separation between each channel is of 400kHz
@@ -287,7 +287,8 @@ void rfm_channel(uint8_t channel){
         carrier_freq = (902 * 1000 * 1000) + (200 * 1000);
         carrier_freq += channel * (400 * 1000);
         rfm_frequency_carrier(carrier_freq);
-        delay_micro(100);   // double the time to hop frequencies
+        rfm_bitwrite(0x0D, 5, 1);
+        delay_micro(120);   // double the time to hop frequencies
     }
 }
 

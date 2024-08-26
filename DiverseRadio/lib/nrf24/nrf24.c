@@ -231,6 +231,7 @@ void nrf_address(uint8_t *buffer, uint8_t length){
 // Change the channel from 0 to 127
 void nrf_channel(uint8_t channel){
     nrf_write_reg(0x05, channel & 0b01111111);
+    delay_micro(200);
 }
 
 // Change the packet size and configure the correct time for TX to transmit

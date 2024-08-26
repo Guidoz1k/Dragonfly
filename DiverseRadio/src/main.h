@@ -31,7 +31,7 @@ typedef enum _radio_t{  // radio identifier
 #define PERIOD1     20      // interrupt period in µs
 #define SYNCPIN1    21      // interruption 1 work pin
 
-#define NRF_MAX     128     // number of channels of the nRF24 radio
-#define RFM_MAX     65      // number of channels of the RFM95 radio
+#define NRF_MAX     125     // top channel of the nRF24 radio
+#define RFM_MAX     64      // top channel of the RFM95 radio
 
 #endif /* __MAIN_H */

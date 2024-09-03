@@ -1,6 +1,11 @@
 /* ABOUT
     Radio 1 is an EBYTE E01-ML01DP5 utilizing a Nordic Semiconductor nRF24L01
     Radio 2 is a HOPERF RFM95W utilizing a Semtech SX1276
+
+    notes for this test:
+    number of channels is limited to MAGICNUMBER of 30 for the nRF24 has problems when switching channels too far apart
+    radio channels are excluded after only one fail, this could be configured
+    CH0 is the standard one, this could be way different
 */
 // purely for visual relief
 #include "main.h"
@@ -301,6 +306,8 @@ void task_core0(void){
 
                 if(transmission_success == true){   // channel is working
                     serial_write_string("S", false);
+                    if(diversity == true)
+                        serial_write_word(active_radio, 1, false);
                     active_radio = future_radio;
                     switch(active_radio){
                     case RADIO_NRF24:
@@ -357,10 +364,12 @@ void task_core0(void){
                 else{                               // channel is not working
                     serial_write_string("F", false);
                     packet_failures++;
-                    if( (active_channel != 0) && (hopping == true)){ // never flags CH0 as inoperative
-                        serial_write_string("(", false);
-                        serial_write_byte(active_channel, DEC, false);
-                        serial_write_string(")", false);
+                    if(diversity == true){
+                        serial_write_word(active_radio, 1, false);
+                        serial_write_string("-", false);
+                    }
+                    if((active_channel != 0) && (hopping == true)){ // never flags CH0 as inoperative
+                        serial_write_word(active_channel, 2, false);
                         switch(active_radio){
                         case RADIO_NRF24:
                             radio1_status[active_channel] = false;
@@ -396,9 +405,11 @@ void task_core0(void){
                 if(packet_counter < 255)
                     packet_counter++;
                 else{
+                    serial_write_string("\n ======================", false);
                     serial_write_string(" 255 tests executed, ", false);
                     serial_write_byte(packet_failures, DEC, false);
-                    serial_write_string(" tests failed, ", true);
+                    serial_write_string(" tests failed,", true);
+                    serial_write_string(" ======================", true);
                     packet_counter = 0;
                     packet_failures = 0;
                 }

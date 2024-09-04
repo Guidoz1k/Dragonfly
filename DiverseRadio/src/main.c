@@ -3,9 +3,10 @@
     Radio 2 is a HOPERF RFM95W utilizing a Semtech SX1276
 
     notes for this test:
-    number of channels is limited to MAGICNUMBER of 30 for the nRF24 has problems when switching channels too far apart
-    radio channels are excluded after only one fail, this could be configured
-    CH0 is the standard one, this could be way different
+    - number of channels is limited to MAGICNUMBER of 30 for the nRF24 has problems when switching channels too far apart
+    - radio channels are excluded after only one fail, this could be configured
+    - CH0 is the standard one, this could be way different
+    - RFM95 has some problems with package contents, and as they are being corrupted, even with CRC, they are ignored by BASE system
 */
 // purely for visual relief
 #include "main.h"
